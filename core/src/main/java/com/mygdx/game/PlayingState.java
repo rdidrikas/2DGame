@@ -2,6 +2,7 @@ package com.mygdx.game;
 
 import java.io.*;
 
+import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -14,10 +15,14 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.Texture;
-import org.lwjgl.Sys;
+
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.*;
 
 public class PlayingState extends GameState implements CollisionChecker{
 
+    private World world;
+    private Box2DDebugRenderer debugRenderer;
     private Player player;
     private TextureRegion[][] dirtTiles;
 
@@ -27,8 +32,14 @@ public class PlayingState extends GameState implements CollisionChecker{
 
     private int tileSize = 16;
 
+    private boolean wasSpacePressed = false;
+
+
     public PlayingState(GameStateManager gsm) {
         super(gsm);
+
+        world = new World(new Vector2(0, Constants.GRAVITY), true);
+        debugRenderer = new Box2DDebugRenderer();
 
         // Load map
         map = new TmxMapLoader().load("Map/map.tmx");
@@ -44,48 +55,128 @@ public class PlayingState extends GameState implements CollisionChecker{
             jumpFrames[temp] = tmpFrames[2][i];
         }
 
-        player = new Player(idleFrames, walkFrames, jumpFrames, this, tileSize);
+        createCollisionTiles(); // Loads collision tiles from the map
+
+
+
+        player = new Player(idleFrames, walkFrames, jumpFrames, this, tileSize, world, 100, 300, 32, 32);
 
         camera = new OrthographicCamera();
-        camera.zoom = 0.4f;
+        camera.zoom = 0.3f;
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     @Override
     public void update(float delta) {
+
+        world.step(delta, 6, 2);
+
+        world.setContactListener(new ContactListener() {
+            @Override
+            public void beginContact(Contact contact) {
+                Fixture fixtureA = contact.getFixtureA();
+                Fixture fixtureB = contact.getFixtureB();
+
+                Object userDataA = fixtureA.getUserData();
+                Object userDataB = fixtureB.getUserData();
+
+                // Check for collision between player and ground
+                if (("player".equals(userDataA) && "ground".equals(userDataB))) {
+                    System.out.println("Player landed on the ground");
+
+                    // Handle player landing on the ground
+                }
+                else if (("player".equals(userDataB) && "ground".equals(userDataA))) {
+                    System.out.println("Player landed on the ground");
+
+                    // Handle player landing on the ground
+                }
+            }
+
+            @Override
+            public void endContact(Contact contact) {
+                Fixture fixtureA = contact.getFixtureA();
+                Fixture fixtureB = contact.getFixtureB();
+
+                Object userDataA = fixtureA.getUserData();
+                Object userDataB = fixtureB.getUserData();
+
+                // Check for end of collision between player and ground
+                if (("player".equals(userDataA) && "ground".equals(userDataB))) {
+                    System.out.println("Player left the ground");
+
+                    // Handle player leaving the ground
+                } else if (("player".equals(userDataB) && "ground".equals(userDataA))) {
+                    System.out.println("Player left the ground");
+
+                    // Handle player leaving the ground
+                }
+            }
+
+            @Override
+            public void preSolve(Contact contact, Manifold oldManifold) {
+                // Handle pre-solve
+            }
+
+            @Override
+            public void postSolve(Contact contact, ContactImpulse impulse) {
+                // Handle post-solve
+            }
+        });
+
+        float playerX = player.getBody().getPosition().x;
+        float playerY = player.getBody().getPosition().y;
         handleInput();
         player.update(delta);
 
         // Update camera position
-        camera.position.set(player.getBounds().x + player.getBounds().width / 2, player.getBounds().y + player.getBounds().height / 2, 0);
+        camera.position.set(
+            playerX,
+            playerY,
+            0
+        );
         camera.update();
     }
 
     @Override
     public void render(SpriteBatch batch) {
+
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.setProjectionMatrix(camera.combined);
+        camera.update();
         batch.begin();
 
         // Render tile map
         renderer.setView(camera);
         renderer.render();
+
         // Render player
         player.render(batch);
         batch.end();
+
+        //debugRenderer.render(world, camera.combined);
     }
 
     private void handleInput() {
         player.isMoving = false;
+        boolean isSpacePressed = Gdx.input.isKeyPressed(Input.Keys.SPACE);
 
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            player.moveLeft();
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            player.moveRight();
-        }
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             player.jump();
+        }
+        if (wasSpacePressed && !isSpacePressed) {
+            // Key was released this frame
+            player.handleJumpRelease();
+        }
+
+        // Update previous state for next frame
+        wasSpacePressed = isSpacePressed;
+
+        if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+            player.moveLeft();
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+            player.moveRight();
         }
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
             player.reset();
@@ -122,13 +213,13 @@ public class PlayingState extends GameState implements CollisionChecker{
     }
 
     @Override
-    public boolean isCollidingBelow(float x, float y, float width) {
-        float playerBottom = y; // Bottom edge of the player
-        float playerLeft = x;
-        float playerRight = x + width;
+    public boolean isCollidingBelow(float x, float y, float width, float height) {
+        float playerBottom = y - height / 2; // Bottom of the player
+        float playerLeft = x - width / 4;
+        float playerRight = x + width / 4;
 
         // Check the tiles below the player
-        return isCollidable(playerLeft, playerBottom - 3) || isCollidable(playerRight, playerBottom - 3);
+        return isCollidable(playerLeft, playerBottom - 1) || isCollidable(playerRight, playerBottom - 1);
     }
 
     @Override
@@ -138,11 +229,51 @@ public class PlayingState extends GameState implements CollisionChecker{
         float playerRight = x + width;
 
         // Check the tiles above the player
-        return isCollidable(playerLeft, playerTop + 1) || isCollidable(playerRight, playerTop + 1);
+        return isCollidable(playerLeft, playerTop + 0.5f) || isCollidable(playerRight, playerTop + 0.5f);
     }
+
+    private void createCollisionTiles() {
+        TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get("Solid");
+        for (int y = 0; y < layer.getHeight(); y++) {
+            for (int x = 0; x < layer.getWidth(); x++) {
+                TiledMapTileLayer.Cell cell = layer.getCell(x, y);
+                if (cell != null) {
+                    // Create a static Box2D body for this tile
+                    BodyDef bodyDef = new BodyDef();
+                    bodyDef.type = BodyDef.BodyType.StaticBody;
+                    bodyDef.position.set(
+                        (x + 0.5f) * layer.getTileWidth(), // Center of tile
+                        (y + 0.5f) * layer.getTileHeight()
+                    );
+
+                    Body body = world.createBody(bodyDef);
+                    PolygonShape shape = new PolygonShape();
+                    shape.setAsBox(
+                        (float) layer.getTileWidth() / 2,
+                        (float) layer.getTileHeight() / 2
+                    );
+
+                    FixtureDef fixtureDef = new FixtureDef();
+                    fixtureDef.shape = shape;
+                    fixtureDef.density = 0.0f; // Static body
+                    fixtureDef.friction = 0.5f;
+
+                    Fixture groundFixture = body.createFixture(fixtureDef);
+                    groundFixture.setUserData("ground");
+
+                    shape.dispose();
+                }
+            }
+        }
+    }
+
+
+
+
 
     @Override
     public void dispose() {
-        // Dispose of resources
+        world.dispose();
+        debugRenderer.dispose();
     }
 }
