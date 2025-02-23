@@ -12,9 +12,8 @@ import com.badlogic.gdx.physics.box2d.*;
 
 public class Player {
 
-    // private Rectangle bounds;
-
     private Body body;
+    private Gun gun;
 
     private CollisionChecker collisionChecker;
     private int tileSize;
@@ -24,17 +23,8 @@ public class Player {
     private float coyoteTimer = 0f;
     private boolean canJump = false;
     private boolean isJumping = false;
-    private float previousY = -1;
 
     private AnimationManager animationManager;
-
-    private Animation<TextureRegion> walkAnimation;
-    private Animation<TextureRegion> jumpAnimation;
-
-    private TextureRegion[] idleFrames;
-    private TextureRegion currentFrame;
-    private TextureRegion[] walkFrames;
-    private TextureRegion[] jumpFrames;
 
     private float playerX, playerY;
     private float width, height;
@@ -46,7 +36,7 @@ public class Player {
     public boolean isFacingLeft = false;
 
 
-    public Player(TextureRegion[] idleFrames, TextureRegion[] walkFrames, TextureRegion[] jumpFrames, CollisionChecker collisionChecker, int tileSize,
+    public Player( CollisionChecker collisionChecker, int tileSize,
                   World world, float x, float y, float width, float height) {
 
         this.width = width;
@@ -54,8 +44,17 @@ public class Player {
         this.playerX = x;
         this.playerY = y;
 
+        this.stateTime = 0;
+        this.isOnGround = true;
+        this.isMoving = false;
+        this.isFiring = false;
+        this.collisionChecker = collisionChecker;
+        this.tileSize = tileSize;
+
         animationManager = new AnimationManager();
         loadAnimations();
+
+        gun = new Gun();
 
         float collisionBoxWidth = width / 3.5f; // Example: 8 pixels
         float collisionBoxHeight = height / 1.5f; // Example: 16 pixels
@@ -74,18 +73,6 @@ public class Player {
         shape.setAsBox(collisionBoxWidth / 2,
             collisionBoxHeight / 2);
 
-        this.walkAnimation = new Animation<>(0.1f, walkFrames);
-        this.jumpAnimation = new Animation<>(0.3f, jumpFrames);
-        this.idleFrames = idleFrames;
-        this.walkFrames = walkFrames;
-        this.jumpFrames = jumpFrames;
-        this.stateTime = 0;
-        this.isOnGround = true;
-        this.isMoving = false;
-        this.isFiring = false;
-        this.collisionChecker = collisionChecker;
-        this.tileSize = tileSize;
-
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
@@ -102,26 +89,6 @@ public class Player {
     private void loadAnimations() {
         Texture playerSheet = new Texture("Animations/RAMBO_anim.png");
         TextureRegion[][] tmpFrames = TextureRegion.split(playerSheet, 32, 32);
-
-        Texture gunSheet = new Texture("Animations/RAMBRO_gun_anim.png");
-        TextureRegion[][] tmpGunFrames = TextureRegion.split(gunSheet, 32, 32);
-
-        // Gun animation idle
-        TextureRegion[] gunIdleFrames = {tmpGunFrames[1][2]};
-        animationManager.addAnimation("gunIdle", new Animation<>(0.5f, gunIdleFrames));
-
-        // Gun animation walk
-        TextureRegion[] gunWalkFrames = {
-            tmpGunFrames[1][18], tmpGunFrames[1][20], tmpGunFrames[1][2],
-            tmpGunFrames[1][10], tmpGunFrames[1][15], tmpGunFrames[1][1]
-        };
-        animationManager.addAnimation("gunWalk", new Animation<>(0.5f, gunWalkFrames));
-
-        // Gun animation fire
-        TextureRegion[] gunFireFrames = {
-            tmpGunFrames[0][1], tmpGunFrames[0][2], tmpGunFrames[0][3],
-            tmpGunFrames[0][7], tmpGunFrames[0][8], tmpGunFrames[0][9]};
-        animationManager.addAnimation("gunFire", new Animation<>(0.1f, gunFireFrames));
 
         // Idle (single frame)
         TextureRegion[] idleFrames = { tmpFrames[0][0] };
@@ -145,7 +112,7 @@ public class Player {
         stateTime += delta;
 
         animationManager.update(delta, isGrounded(), isMoving, isFiring, 0); // player render animation
-        animationManager.update(delta, isGrounded(), isMoving, isFiring, 1); // gun render animation
+        gun.update(delta, isGrounded(), isMoving, isFiring, isFacingLeft); // render gun animation
 
         if(body.getLinearVelocity().y < 10){
             if(isJumping){
@@ -175,9 +142,7 @@ public class Player {
 
         TextureRegion currentPlayerFrame = animationManager.getCurrentPlayerFrame(isFacingLeft);
         batch.draw(currentPlayerFrame, x, y, width, height);
-
-        TextureRegion currentGunFrame = animationManager.getCurrentGunFrame(isFacingLeft);
-        batch.draw(currentGunFrame, x, y, width, height);
+        gun.render(batch, x, y); // draw gun
     }
 
 

@@ -45,21 +45,12 @@ public class PlayingState extends GameState implements CollisionChecker{
         map = new TmxMapLoader().load("Map/map.tmx");
         renderer = new OrthogonalTiledMapRenderer(map);
 
-        Texture playerSheet = new Texture("Animations/RAMBO_anim.png");
-        TextureRegion[][] tmpFrames = TextureRegion.split(playerSheet, 32, 32);
-
-        TextureRegion[] idleFrames = { tmpFrames[0][0] };
-        TextureRegion[] walkFrames = { tmpFrames[0][1], tmpFrames[0][2] };
-        TextureRegion[] jumpFrames = new TextureRegion[6];
-        for (int i = 6, temp = 0; i < 12; i++, temp++) {
-            jumpFrames[temp] = tmpFrames[2][i];
-        }
 
         createCollisionTiles(); // Loads collision tiles from the map
 
 
 
-        player = new Player(idleFrames, walkFrames, jumpFrames, this, tileSize, world, 100, 300, 32, 32);
+        player = new Player(this, tileSize, world, 100, 300, 32, 32);
 
         camera = new OrthographicCamera();
         camera.zoom = 0.3f;
