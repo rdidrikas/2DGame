@@ -40,8 +40,7 @@ public class AnimationManager {
             } else {
                 currentState = "idle";
             }
-        }
-        else{
+        } else if (type == 1){
             if (isFiring){
                 currentGunState = "gunFire";
             } else if (isMoving){
@@ -70,4 +69,9 @@ public class AnimationManager {
         }
         return flippedFrame;
     }
+
+    public TextureRegion getBulletFrame(){
+        return animations.get("bullet").getKeyFrame(stateTime, true);
+    }
+
 }

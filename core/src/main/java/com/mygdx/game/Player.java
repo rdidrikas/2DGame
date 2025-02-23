@@ -150,9 +150,8 @@ public class Player {
         isMoving = moving;
     }
 
-
-    public void fire(){
-        isFiring = true;
+    public void fire() {
+        gun.fire(body.getWorld(), body.getPosition().x, body.getPosition().y, 0);
     }
 
     public void jump() {

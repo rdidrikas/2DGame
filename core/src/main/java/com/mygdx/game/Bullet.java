@@ -1,22 +1,33 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.physics.box2d.*;
 
 public class Bullet {
 
+    private AnimationManager animationManager;
+
     private Body body; // Box2D body for physics
     private boolean active = true; // Track if the bullet is active
     private float speed = 500f; // Bullet speed
 
-    public Bullet(World world, float x, float y, float angle) {
+    public Bullet(World world, float x, float y, float angle, Texture bulletSheet) {
+
+        animationManager = new AnimationManager();
+        loadBullet(bulletSheet);
+
         // Create a Box2D body for the bullet
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set(x, y);
         body = world.createBody(bodyDef);
+
+        // Load Animation
+
 
         // Define the bullet's collision shape
         CircleShape shape = new CircleShape();
@@ -41,6 +52,16 @@ public class Bullet {
 
         // Set user data for collision detection
         body.setUserData(this);
+    }
+
+    public void loadBullet(Texture bulletSheet){
+
+        TextureRegion[][] tmpBulletFrames = TextureRegion.split(bulletSheet, 16, 16);
+
+        // Bullet animation
+        TextureRegion[] bulletFrames = {tmpBulletFrames[0][0], tmpBulletFrames[0][1], tmpBulletFrames[0][2]};
+        animationManager.addAnimation("bullet", new Animation<>(0.5f, bulletFrames));
+
     }
 
     public void update(float delta) {

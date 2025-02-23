@@ -173,7 +173,7 @@ public class PlayingState extends GameState implements CollisionChecker{
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
             player.reset();
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)){
+        if (Gdx.input.isKeyPressed(Input.Keys.J)){
             player.fire();
         }
 

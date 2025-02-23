@@ -4,8 +4,14 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
 
 public class Gun {
+
+    private Array<Bullet> bullets = new Array<>();
+    private Texture bulletSheet = new Texture("Animations/Bullet Friendly.png");
+
     private AnimationManager animationManager;
     private boolean isFiring;
     private boolean isFacingLeft;
@@ -42,16 +48,26 @@ public class Gun {
     public void update(float delta, boolean isGrounded, boolean isMoving, boolean isFiring, boolean isFacingLeft) {
         this.isFiring = isFiring;
         this.isFacingLeft = isFacingLeft;
+
         animationManager.update(delta, isGrounded, isMoving, isFiring, 1);
+
+        for (Bullet bullet : bullets) {
+            bullet.update(delta);
+        }
+        //bullets.removeAll(bullets.select(b -> !b.isActive()), true);
     }
 
     public void render(SpriteBatch batch, float playerX, float playerY) {
         TextureRegion currentGunFrame = animationManager.getCurrentGunFrame(isFacingLeft);
         batch.draw(currentGunFrame, playerX, playerY, 32, 32);
+        for (Bullet bullet : bullets) {
+            bullet.render(batch, animationManager.getBulletFrame());
+        }
     }
 
-    public void fire() {
+    public void fire(World world, float x, float y, float angle) {
         isFiring = true;
+        bullets.add(new Bullet(world, x, y, angle, bulletSheet));
     }
 
     public void stopFiring() {
