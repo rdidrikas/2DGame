@@ -151,6 +151,7 @@ public class PlayingState extends GameState implements CollisionChecker{
         renderer.render();
 
         // Render player
+        player.update(Gdx.graphics.getDeltaTime());
         player.render(batch);
         batch.end();
 

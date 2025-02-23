@@ -1,9 +1,11 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
@@ -18,18 +20,21 @@ public class Player {
     private int tileSize;
 
 
-
     private float coyoteTime = 0.15f; // 150ms
     private float coyoteTimer = 0f;
     private boolean canJump = false;
     private boolean isJumping = false;
     private float previousY = -1;
 
+    private AnimationManager animationManager;
+
     private Animation<TextureRegion> walkAnimation;
     private Animation<TextureRegion> jumpAnimation;
 
     private TextureRegion[] idleFrames;
     private TextureRegion currentFrame;
+    private TextureRegion[] walkFrames;
+    private TextureRegion[] jumpFrames;
 
     private float playerX, playerY;
     private float width, height;
@@ -47,6 +52,9 @@ public class Player {
         this.height = height;
         this.playerX = x;
         this.playerY = y;
+
+        animationManager = new AnimationManager();
+        loadAnimations();
 
         float collisionBoxWidth = width / 3.5f; // Example: 8 pixels
         float collisionBoxHeight = height / 1.5f; // Example: 16 pixels
@@ -68,6 +76,8 @@ public class Player {
         this.walkAnimation = new Animation<>(0.1f, walkFrames);
         this.jumpAnimation = new Animation<>(0.3f, jumpFrames);
         this.idleFrames = idleFrames;
+        this.walkFrames = walkFrames;
+        this.jumpFrames = jumpFrames;
         this.stateTime = 0;
         this.isOnGround = true;
         this.isMoving = false;
@@ -87,9 +97,31 @@ public class Player {
 
     }
 
+    private void loadAnimations() {
+        Texture playerSheet = new Texture("Animations/RAMBO_anim.png");
+        TextureRegion[][] tmpFrames = TextureRegion.split(playerSheet, 32, 32);
+
+        // Idle (single frame)
+        TextureRegion[] idleFrames = { tmpFrames[0][0] };
+        animationManager.addAnimation("idle", new Animation<>(0.1f, idleFrames));
+
+        // Walk (loop)
+        TextureRegion[] walkFrames = { tmpFrames[0][1], tmpFrames[0][2], tmpFrames[0][3] };
+        animationManager.addAnimation("walk", new Animation<>(0.3f, walkFrames));
+
+        // Jump (6 frames, no loop)
+        TextureRegion[] jumpFrames = new TextureRegion[6];
+        for (int i = 6, temp = 0; i < 12; i++, temp++) {
+            jumpFrames[temp] = tmpFrames[2][i];
+        }
+        animationManager.addAnimation("jump", new Animation<>(0.2f, jumpFrames));
+    }
+
+
     public void update(float delta) {
 
         stateTime += delta;
+        animationManager.update(delta, isGrounded(), isMoving);
         if(body.getLinearVelocity().y < 10){
             if(isJumping){
                 handleJumpRelease();
@@ -116,24 +148,8 @@ public class Player {
         float x = body.getPosition().x - width / 2;
         float y = body.getPosition().y + Constants.SPRITE_YOFFSET - height / 2;
 
-        if (!isGrounded()) {
-            currentFrame = jumpAnimation.getKeyFrame(stateTime, true);
-        } else if (isMoving) {
-            currentFrame = walkAnimation.getKeyFrame(stateTime, true);
-        } else {
-            currentFrame = idleFrames[0]; // Idle animation
-        }
-        if (isFacingLeft) {
-            batch.draw(
-                currentFrame,
-                x + width,
-                y,
-                -width,
-                height
-            );
-        } else {
-            batch.draw(currentFrame, x, y, width, height);
-        }
+        TextureRegion currentFrame = animationManager.getCurrentFrame(isFacingLeft);
+        batch.draw(currentFrame, x, y, width, height);
     }
 
 
