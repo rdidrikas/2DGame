@@ -41,6 +41,7 @@ public class Player {
     private float stateTime;
     public boolean isOnGround;
     public boolean isMoving;
+    public boolean isFiring;
 
     public boolean isFacingLeft = false;
 
@@ -81,6 +82,7 @@ public class Player {
         this.stateTime = 0;
         this.isOnGround = true;
         this.isMoving = false;
+        this.isFiring = false;
         this.collisionChecker = collisionChecker;
         this.tileSize = tileSize;
 
@@ -100,6 +102,26 @@ public class Player {
     private void loadAnimations() {
         Texture playerSheet = new Texture("Animations/RAMBO_anim.png");
         TextureRegion[][] tmpFrames = TextureRegion.split(playerSheet, 32, 32);
+
+        Texture gunSheet = new Texture("Animations/RAMBRO_gun_anim.png");
+        TextureRegion[][] tmpGunFrames = TextureRegion.split(gunSheet, 32, 32);
+
+        // Gun animation idle
+        TextureRegion[] gunIdleFrames = {tmpGunFrames[1][2]};
+        animationManager.addAnimation("gunIdle", new Animation<>(0.5f, gunIdleFrames));
+
+        // Gun animation walk
+        TextureRegion[] gunWalkFrames = {
+            tmpGunFrames[1][18], tmpGunFrames[1][20], tmpGunFrames[1][2],
+            tmpGunFrames[1][10], tmpGunFrames[1][15], tmpGunFrames[1][1]
+        };
+        animationManager.addAnimation("gunWalk", new Animation<>(0.5f, gunWalkFrames));
+
+        // Gun animation fire
+        TextureRegion[] gunFireFrames = {
+            tmpGunFrames[0][1], tmpGunFrames[0][2], tmpGunFrames[0][3],
+            tmpGunFrames[0][7], tmpGunFrames[0][8], tmpGunFrames[0][9]};
+        animationManager.addAnimation("gunFire", new Animation<>(0.1f, gunFireFrames));
 
         // Idle (single frame)
         TextureRegion[] idleFrames = { tmpFrames[0][0] };
@@ -121,7 +143,10 @@ public class Player {
     public void update(float delta) {
 
         stateTime += delta;
-        animationManager.update(delta, isGrounded(), isMoving);
+
+        animationManager.update(delta, isGrounded(), isMoving, isFiring, 0); // player render animation
+        animationManager.update(delta, isGrounded(), isMoving, isFiring, 1); // gun render animation
+
         if(body.getLinearVelocity().y < 10){
             if(isJumping){
                 handleJumpRelease();
@@ -148,8 +173,11 @@ public class Player {
         float x = body.getPosition().x - width / 2;
         float y = body.getPosition().y + Constants.SPRITE_YOFFSET - height / 2;
 
-        TextureRegion currentFrame = animationManager.getCurrentFrame(isFacingLeft);
-        batch.draw(currentFrame, x, y, width, height);
+        TextureRegion currentPlayerFrame = animationManager.getCurrentPlayerFrame(isFacingLeft);
+        batch.draw(currentPlayerFrame, x, y, width, height);
+
+        TextureRegion currentGunFrame = animationManager.getCurrentGunFrame(isFacingLeft);
+        batch.draw(currentGunFrame, x, y, width, height);
     }
 
 
@@ -157,6 +185,10 @@ public class Player {
         isMoving = moving;
     }
 
+
+    public void fire(){
+        isFiring = true;
+    }
 
     public void jump() {
         if (canJump) {
