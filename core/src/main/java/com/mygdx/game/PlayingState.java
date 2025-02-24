@@ -29,8 +29,6 @@ public class PlayingState extends GameState {
     private OrthogonalTiledMapRenderer renderer;
     private OrthographicCamera camera;
 
-    private int tileSize = 16;
-
     private boolean wasSpacePressed = false;
 
     // Removing bullets inside world.step() causes a crash
@@ -51,7 +49,6 @@ public class PlayingState extends GameState {
 
         // Initialize player with METER-based position/size
         player = new Player(
-            tileSize,
             world,
             100 / Constants.PPM,  // X position (meters)
             300 / Constants.PPM,  // Y position (meters)
@@ -192,7 +189,7 @@ public class PlayingState extends GameState {
         player.render(batch);
         batch.end();
 
-        debugRenderer.render(world, camera.combined);
+        // debugRenderer.render(world, camera.combined);
     }
 
     public void handleBulletTileCollision(Fixture bulletFixture) {

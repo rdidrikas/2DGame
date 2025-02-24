@@ -16,9 +16,6 @@ public class Player {
     private Body body;
     private Gun gun;
 
-    private int tileSize;
-
-
     private float coyoteTime = 0.15f; // 150ms
     private float coyoteTimer = 0f;
     private boolean canJump = false;
@@ -36,7 +33,7 @@ public class Player {
     public boolean isFacingLeft = false;
 
 
-    public Player(int tileSize, World world, float x, float y, float width, float height) {
+    public Player(World world, float x, float y, float width, float height) {
 
         this.width = width;
         this.height = height;
@@ -47,7 +44,6 @@ public class Player {
         this.isOnGround = true;
         this.isMoving = false;
         this.isFiring = false;
-        this.tileSize = tileSize;
 
         animationManager = new AnimationManager();
         loadAnimations();
@@ -156,7 +152,8 @@ public class Player {
     public void jump() {
         if (canJump) {
             // body.setGravityScale(0.15f);
-            body.applyLinearImpulse(new Vector2(0, Constants.PLAYER_JUMP), body.getWorldCenter(), true);
+            // body.applyLinearImpulse(new Vector2(0, Constants.PLAYER_JUMP), body.getWorldCenter(), true);
+            body.setLinearVelocity(body.getLinearVelocity().x, Constants.PLAYER_JUMP);
             canJump = false;
             isJumping = true;
             coyoteTimer = 0;
