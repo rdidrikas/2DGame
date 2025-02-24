@@ -85,6 +85,7 @@ public class Player {
 
         shape.dispose();
 
+
     }
 
     private void loadAnimations() {

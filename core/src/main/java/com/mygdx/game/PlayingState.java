@@ -23,6 +23,7 @@ public class PlayingState extends GameState {
     private World world;
     private Box2DDebugRenderer debugRenderer;
     private Player player;
+    private EnemySpawner spawner;
     private TextureRegion[][] dirtTiles;
 
     private TiledMap map;
@@ -44,6 +45,8 @@ public class PlayingState extends GameState {
         map = new TmxMapLoader().load("Map/map.tmx");
         renderer = new OrthogonalTiledMapRenderer(map, 1 / Constants.PPM);
         // *** PPM CHANGE: Scale map renderer to meters
+
+        spawner = new EnemySpawner(world);
 
         createCollisionTiles();
 
@@ -151,6 +154,8 @@ public class PlayingState extends GameState {
         handleInput();
         player.update(delta);
 
+
+
         // Update camera position
 
         if (playerX < 200 / Constants.PPM) {
@@ -187,7 +192,14 @@ public class PlayingState extends GameState {
         // Render player
         player.update(Gdx.graphics.getDeltaTime());
         player.render(batch);
+
+        // Render enemies
+        spawner.update(Gdx.graphics.getDeltaTime(), player.getBody().getPosition());
+        spawner.render(batch);
+
         batch.end();
+
+        /*********** DEBUGGER **********/
 
         // debugRenderer.render(world, camera.combined);
     }
@@ -225,8 +237,12 @@ public class PlayingState extends GameState {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
             player.reset();
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.J)){
+        if (Gdx.input.isKeyJustPressed(Input.Keys.J)){
             player.fire();
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.K)){
+            System.out.println("Player X: " + player.getBody().getPosition().x);
+            spawner.spawnEnemy(player.getBody().getPosition().x, player.getBody().getPosition().y);
         }
 
     }
@@ -259,7 +275,7 @@ public class PlayingState extends GameState {
                     fixtureDef.shape = shape;
                     fixtureDef.density = 0.0f;
                     fixtureDef.filter.categoryBits = Constants.TILE_CATEGORY;
-                    fixtureDef.filter.maskBits = Constants.BULLET_CATEGORY | Constants.PLAYER_CATEGORY;
+                    fixtureDef.filter.maskBits = Constants.BULLET_CATEGORY | Constants.PLAYER_CATEGORY | Constants.ENEMY_CATEGORY;
 
                     Fixture groundFixture = body.createFixture(fixtureDef);
                     groundFixture.setUserData("ground");

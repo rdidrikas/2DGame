@@ -29,6 +29,7 @@ public class AnimationManager {
 
         // type == 0 -> player
         // type == 1 -> gun
+        // type == 2 -> enemy
 
         // Update animation state based on player conditions
 
@@ -47,6 +48,12 @@ public class AnimationManager {
                 currentGunState = "gunWalk";
             } else {
                 currentGunState = "gunIdle";
+            }
+        } else if(type == 2){
+            if (isMoving) {
+                currentState = "enemyNomrmalWalk";
+            } else {
+                currentState = "enemyNormalIdle";
             }
         }
 
