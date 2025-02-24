@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import org.lwjgl.Sys;
 
 public class Player {
 
@@ -53,8 +54,10 @@ public class Player {
 
         gun = new Gun();
 
-        float collisionBoxWidth = width / 3.5f; // Example: 8 pixels
-        float collisionBoxHeight = height / 1.5f; // Example: 16 pixels
+
+
+        float collisionBoxWidth = width / 3.5f;
+        float collisionBoxHeight = height / 1.5f;
 
         // Calculate offset to align collision box with sprite's feet
         float yOffset = (height - collisionBoxHeight) / 2;
@@ -65,7 +68,7 @@ public class Player {
         bodyDef.fixedRotation = true;
 
         body = world.createBody(bodyDef);
-
+        body.setBullet(true);
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(collisionBoxWidth / 2,
             collisionBoxHeight / 2);
@@ -75,6 +78,8 @@ public class Player {
         fixtureDef.density = 1f;
         fixtureDef.friction = 20f;
         fixtureDef.restitution = 0f;
+
+        body.setLinearDamping(0.1f);
 
         fixtureDef.filter.categoryBits = Constants.PLAYER_CATEGORY;
         fixtureDef.filter.maskBits = Constants.TILE_CATEGORY;
@@ -114,18 +119,12 @@ public class Player {
         animationManager.update(delta, isGrounded(), isMoving, isFiring, 0); // player render animation
         gun.update(delta, isGrounded(), isMoving, isFiring, isFacingLeft); // render gun animation
 
-        if(body.getLinearVelocity().y < 10){
-            if(isJumping){
-                handleJumpRelease();
-            }
-            else {
-                body.setGravityScale(1f);
-            }
-        }
+
         if (isGrounded()) {
             coyoteTimer = coyoteTime;
             canJump = true;
         } else {
+            System.out.println(body.getLinearVelocity().y);
             coyoteTimer -= delta;
             if (coyoteTimer <= 0) {
                 canJump = false;
@@ -156,7 +155,7 @@ public class Player {
 
     public void jump() {
         if (canJump) {
-            body.setGravityScale(0.15f);
+            // body.setGravityScale(0.15f);
             body.applyLinearImpulse(new Vector2(0, Constants.PLAYER_JUMP), body.getWorldCenter(), true);
             canJump = false;
             isJumping = true;
@@ -166,7 +165,7 @@ public class Player {
     }
     public void handleJumpRelease() {
         if (isJumping) {
-            body.setGravityScale(1.5f); // Example: faster fall
+            // body.setGravityScale(1.5f); // Example: faster fall
             isJumping = false;
         }
     }
@@ -203,10 +202,13 @@ public class Player {
         return body;
     }
 
-    private boolean isGrounded() {
+
+
+    public boolean isGrounded() {
         // Use velocity or other checks instead of collision flags
-        return Math.abs(body.getLinearVelocity().y) < 1f && Math.abs(body.getLinearVelocity().y) > -1f; // Near-zero vertical velocity
+        return (Math.abs(body.getLinearVelocity().y) < 0.01f && Math.abs(body.getLinearVelocity().y) > -0.01f); // Near-zero vertical velocity
     }
+
 
 
 }

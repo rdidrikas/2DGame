@@ -80,9 +80,8 @@ public class Gun {
 
     public void render(SpriteBatch batch, float playerX, float playerY) {
         TextureRegion currentGunFrame = animationManager.getCurrentGunFrame(isFacingLeft);
-        batch.draw(currentGunFrame, playerX, playerY, 32, 32);
+        batch.draw(currentGunFrame, playerX, playerY, 32 / Constants.PPM, 32 / Constants.PPM);
         for (Bullet bullet : bullets) {
-
             bullet.render(batch, animationManager.getBulletFrame(), isFacingLeft);
         }
     }

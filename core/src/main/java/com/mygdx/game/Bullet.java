@@ -19,10 +19,12 @@ public class Bullet {
     private Vector2 startPosition;
 
     private boolean applyOffset;
+    private boolean wasLeft;
 
     public Bullet(World world, float x, float y, float angle, boolean isFacingLeft) {
 
         applyOffset = true;
+        wasLeft = false;
 
         // Create a Box2D body for the bullet
         BodyDef bodyDef = new BodyDef();
@@ -39,7 +41,7 @@ public class Bullet {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
-        fixtureDef.friction = 0.5f;
+        fixtureDef.friction = 0f;
         fixtureDef.restitution = 0f;
 
         // Set the bullet's collision category and with what it can collide
@@ -56,8 +58,8 @@ public class Bullet {
         if(isFacingLeft) body.setLinearVelocity(-Constants.RAMBO_BULLET_SPEED, 0);
         else body.setLinearVelocity(Constants.RAMBO_BULLET_SPEED, 0);
 
-        body.setLinearDamping(0f);
-        body.setAngularDamping(0f);
+        //body.setLinearDamping(0f);
+        //body.setAngularDamping(0f);
         body.setBullet(true);
 
         shape.dispose();
@@ -73,10 +75,6 @@ public class Bullet {
 
     public void update(float delta, boolean isFacingLeft) {
 
-        // Manual bullet speed
-        //float bulletX = isFacingLeft ? body.getPosition().x - Constants.RAMBO_BULLET_SPEED * delta : Constants.RAMBO_BULLET_SPEED * delta + body.getPosition().x;
-        //body.setTransform(bulletX, body.getPosition().y, 0);
-
         // Deactivate the bullet if it goes too far
         if (active) {
             Vector2 currentPosition = body.getPosition();
@@ -84,7 +82,6 @@ public class Bullet {
             if (abs(distanceTraveled) > Constants.RAMBO_BULLET_DISTANCE) {
                 this.active = false;
             }
-            System.out.println("Bullet Velocity: " + body.getLinearVelocity());
 
         }
 
@@ -92,24 +89,35 @@ public class Bullet {
 
     public void render(SpriteBatch batch, TextureRegion bulletTexture, boolean isFacingLeft) {
         if (active) {
-            float x = body.getPosition().x - bulletTexture.getRegionWidth() / 2f;
-            float y = body.getPosition().y - bulletTexture.getRegionHeight() / 2f - Constants.RAMBO_BULLET_YOFFSET;
+
+            float newHeight = bulletTexture.getRegionHeight() / Constants.PPM;
+            float newWidth = bulletTexture.getRegionWidth() / Constants.PPM;
+
+            float x = body.getPosition().x - newWidth / 2f;
+            float y = body.getPosition().y - newHeight / 2f - Constants.RAMBO_BULLET_YOFFSET;
+
 
             // Apply the offset only if the flag is true
-            if (isFacingLeft) {
-                if (applyOffset) {
+            if (applyOffset) {
+                if (isFacingLeft) {
                     x -= Constants.RAMBO_BULLET_XOFFSET; // Apply the offset to the left
+                    wasLeft = true;
+                } else {
+                    x += Constants.RAMBO_BULLET_XOFFSET; // Apply the offset to the right
+                    wasLeft = false;
                 }
             } else {
-                if (applyOffset) {
+                if (wasLeft) {
+                    x -= Constants.RAMBO_BULLET_XOFFSET; // Apply the offset to the left
+                } else {
                     x += Constants.RAMBO_BULLET_XOFFSET; // Apply the offset to the right
                 }
             }
 
-            applyOffset = false;
+            applyOffset = false; // Only check if the player was facing left when the bullet is created
 
             // Draw the bullet at its calculated position
-            batch.draw(bulletTexture, x, y);
+            batch.draw(bulletTexture, x, y, newWidth, newHeight);
         }
     }
 

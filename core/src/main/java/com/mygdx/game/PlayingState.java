@@ -41,23 +41,32 @@ public class PlayingState extends GameState {
         super(gsm);
 
         world = new World(new Vector2(0, Constants.GRAVITY), true);
-        world.setContinuousPhysics(true);
         debugRenderer = new Box2DDebugRenderer();
 
-        // Load map
         map = new TmxMapLoader().load("Map/map.tmx");
-        renderer = new OrthogonalTiledMapRenderer(map);
+        renderer = new OrthogonalTiledMapRenderer(map, 1 / Constants.PPM);
+        // *** PPM CHANGE: Scale map renderer to meters
 
+        createCollisionTiles();
 
-        createCollisionTiles(); // Loads collision tiles from the map
+        // Initialize player with METER-based position/size
+        player = new Player(
+            tileSize,
+            world,
+            100 / Constants.PPM,  // X position (meters)
+            300 / Constants.PPM,  // Y position (meters)
+            32 / Constants.PPM,   // Width (meters)
+            32 / Constants.PPM    // Height (meters)
+        );
 
-
-
-        player = new Player (tileSize, world, 100, 300, 32, 32);
-
+        // Set camera viewport to METERS
         camera = new OrthographicCamera();
-        camera.zoom = 0.3f;
-        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        camera.setToOrtho(
+            false,
+            Gdx.graphics.getWidth() / Constants.PPM,  // Viewport width (meters)
+            Gdx.graphics.getHeight() / Constants.PPM  // Viewport height (meters)
+        );
+        camera.zoom = 0.3f; // *** PPM CHANGE: Zoom out camera
     }
 
     @Override
@@ -85,16 +94,43 @@ public class PlayingState extends GameState {
                 Object userDataA = fixtureA.getUserData();
                 Object userDataB = fixtureB.getUserData();
 
+
                 if (userDataA.equals("friendlyBullet") && userDataB.equals("ground")) {
                     handleBulletTileCollision(fixtureA);
+
+                    System.out.println("Bullet hit ground");
                 } else if (userDataA.equals("ground") && userDataB.equals("friendlyBullet")) {
                     handleBulletTileCollision(fixtureB);
+                    System.out.println("Bullet hit ground");
+                }
+                else if(userDataA.equals("player") && userDataB.equals("ground")){
+                    //System.out.println("Player hit ground");
+                } else if (userDataA.equals("ground") && userDataB.equals("player")) {
+                    //System.out.println("Player hit ground");
                 }
 
             }
 
             @Override
             public void endContact(Contact contact) {
+                Fixture fixtureA = contact.getFixtureA();
+                Fixture fixtureB = contact.getFixtureB();
+
+                Object userDataA = fixtureA.getUserData();
+                Object userDataB = fixtureB.getUserData();
+
+
+
+                if(userDataA.equals("player") && userDataB.equals("ground")){
+                    if(!player.isGrounded()){
+                        System.out.println("Player left ground");
+                    }
+                } else if (userDataA.equals("ground") && userDataB.equals("player")) {
+                    if(!player.isGrounded()){
+                        System.out.println("Player left ground");
+                    }
+                }
+
 
             }
 
@@ -107,6 +143,10 @@ public class PlayingState extends GameState {
             public void postSolve(Contact contact, ContactImpulse impulse) {
                 // Handle post-solve
             }
+            private boolean isFootSensorContact(Fixture a, Fixture b) {
+                return (a.getUserData() == "foot" && b.getUserData() == "ground") ||
+                    (b.getUserData() == "foot" && a.getUserData() == "ground");
+            }
         });
 
         float playerX = player.getBody().getPosition().x;
@@ -116,9 +156,9 @@ public class PlayingState extends GameState {
 
         // Update camera position
 
-        if (playerX < 200) {
+        if (playerX < 200 / Constants.PPM) {
             camera.position.set(
-                200,
+                200 / Constants.PPM,
                 playerY,
                 0
             );
@@ -129,6 +169,8 @@ public class PlayingState extends GameState {
                 0
             );
         }
+
+
 
         camera.update();
     }
@@ -195,38 +237,36 @@ public class PlayingState extends GameState {
 
     private void createCollisionTiles() {
         TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get("Solid");
+        float tileWidthMeters = layer.getTileWidth() / Constants.PPM;  // *** PPM CHANGE
+        float tileHeightMeters = layer.getTileHeight() / Constants.PPM; // ***
+
         for (int y = 0; y < layer.getHeight(); y++) {
             for (int x = 0; x < layer.getWidth(); x++) {
                 TiledMapTileLayer.Cell cell = layer.getCell(x, y);
                 if (cell != null) {
-                    // Create a static Box2D body for this tile
                     BodyDef bodyDef = new BodyDef();
                     bodyDef.type = BodyDef.BodyType.StaticBody;
                     bodyDef.position.set(
-                        (x + 0.5f) * layer.getTileWidth(), // Center of tile
-                        (y + 0.5f) * layer.getTileHeight()
+                        (x + 0.5f) * tileWidthMeters, // Center X (meters)
+                        (y + 0.5f) * tileHeightMeters  // Center Y (meters)
                     );
 
                     Body body = world.createBody(bodyDef);
                     PolygonShape shape = new PolygonShape();
                     shape.setAsBox(
-                        (float) layer.getTileWidth() / 2,
-                        (float) layer.getTileHeight() / 2
+                        tileWidthMeters / 2 - 0.01f,  // Half-width (meters)
+                        tileHeightMeters / 2 - 0.01f // Half-height (meters)
                     );
 
                     FixtureDef fixtureDef = new FixtureDef();
                     fixtureDef.shape = shape;
-                    fixtureDef.density = 0.0f; // Static body
-                    fixtureDef.friction = 0.5f;
-
-                    fixtureDef.filter.categoryBits = Constants.TILE_CATEGORY; // Tile category
-                    // Collide with player and bullets
+                    fixtureDef.density = 0.0f;
+                    fixtureDef.friction = 0.1f;
+                    fixtureDef.filter.categoryBits = Constants.TILE_CATEGORY;
                     fixtureDef.filter.maskBits = Constants.BULLET_CATEGORY | Constants.PLAYER_CATEGORY;
-
 
                     Fixture groundFixture = body.createFixture(fixtureDef);
                     groundFixture.setUserData("ground");
-
                     shape.dispose();
                 }
             }
