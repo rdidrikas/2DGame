@@ -193,7 +193,7 @@ public class Player {
     }
 
     public void reset() {
-        body.setTransform(100, 300, 0); // Reset position
+        body.setTransform(100 / Constants.PPM, 300 / Constants.PPM, 0); // Reset position
         body.setLinearVelocity(0, 0); // Reset velocity
         isOnGround = false;
     }

@@ -261,7 +261,6 @@ public class PlayingState extends GameState {
                     FixtureDef fixtureDef = new FixtureDef();
                     fixtureDef.shape = shape;
                     fixtureDef.density = 0.0f;
-                    fixtureDef.friction = 0.1f;
                     fixtureDef.filter.categoryBits = Constants.TILE_CATEGORY;
                     fixtureDef.filter.maskBits = Constants.BULLET_CATEGORY | Constants.PLAYER_CATEGORY;
 

@@ -18,7 +18,7 @@ public class Constants {
     public static final int RAMBO_BULLET_DAMAGE = 10;
     public static final float RAMBO_SHOT_COOLDOWN = 0.5f; // Seconds
     public static final float RAMBO_BULLET_DISTANCE = 200f;
-    public static final float RAMBO_BULLET_XOFFSET = 10f / PPM;
-    public static final float RAMBO_BULLET_YOFFSET = 3f / PPM;
+    public static final float RAMBO_BULLET_XOFFSET = 0.3f;
+    public static final float RAMBO_BULLET_YOFFSET = 0.1f;
 
 }
