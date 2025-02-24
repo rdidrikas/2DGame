@@ -1,7 +1,5 @@
 package com.mygdx.game;
 
-import java.io.*;
-
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
@@ -18,8 +16,9 @@ import com.badlogic.gdx.graphics.Texture;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Array;
 
-public class PlayingState extends GameState implements CollisionChecker{
+public class PlayingState extends GameState {
 
     private World world;
     private Box2DDebugRenderer debugRenderer;
@@ -33,6 +32,9 @@ public class PlayingState extends GameState implements CollisionChecker{
     private int tileSize = 16;
 
     private boolean wasSpacePressed = false;
+
+    // Removing bullets inside world.step() causes a crash
+    private Array<Body> bulletsToRemove = new Array<>();
 
 
     public PlayingState(GameStateManager gsm) {
@@ -50,7 +52,7 @@ public class PlayingState extends GameState implements CollisionChecker{
 
 
 
-        player = new Player(this, tileSize, world, 100, 300, 32, 32);
+        player = new Player (tileSize, world, 100, 300, 32, 32);
 
         camera = new OrthographicCamera();
         camera.zoom = 0.3f;
@@ -62,46 +64,37 @@ public class PlayingState extends GameState implements CollisionChecker{
 
         world.step(delta, 6, 2);
 
+        // Fixture body remover
+        for (Body bullet : bulletsToRemove) {
+            world.destroyBody(bullet); // Destroy the body (and its fixtures)
+        }
+        bulletsToRemove.clear(); // Clear the queue
+
+
+        /*************** Collisions ***************/
+
         world.setContactListener(new ContactListener() {
             @Override
             public void beginContact(Contact contact) {
+
+                // Colliding objects:
                 Fixture fixtureA = contact.getFixtureA();
                 Fixture fixtureB = contact.getFixtureB();
 
                 Object userDataA = fixtureA.getUserData();
                 Object userDataB = fixtureB.getUserData();
 
-                // Check for collision between player and ground
-                if (("player".equals(userDataA) && "ground".equals(userDataB))) {
-                    System.out.println("Player landed on the ground");
-
-                    // Handle player landing on the ground
+                if (userDataA.equals("friendlyBullet") && userDataB.equals("ground")) {
+                    handleBulletTileCollision(fixtureA);
+                } else if (userDataA.equals("ground") && userDataB.equals("friendlyBullet")) {
+                    handleBulletTileCollision(fixtureB);
                 }
-                else if (("player".equals(userDataB) && "ground".equals(userDataA))) {
-                    System.out.println("Player landed on the ground");
 
-                    // Handle player landing on the ground
-                }
             }
 
             @Override
             public void endContact(Contact contact) {
-                Fixture fixtureA = contact.getFixtureA();
-                Fixture fixtureB = contact.getFixtureB();
 
-                Object userDataA = fixtureA.getUserData();
-                Object userDataB = fixtureB.getUserData();
-
-                // Check for end of collision between player and ground
-                if (("player".equals(userDataA) && "ground".equals(userDataB))) {
-                    System.out.println("Player left the ground");
-
-                    // Handle player leaving the ground
-                } else if (("player".equals(userDataB) && "ground".equals(userDataA))) {
-                    System.out.println("Player left the ground");
-
-                    // Handle player leaving the ground
-                }
             }
 
             @Override
@@ -149,6 +142,15 @@ public class PlayingState extends GameState implements CollisionChecker{
         //debugRenderer.render(world, camera.combined);
     }
 
+    public void handleBulletTileCollision(Fixture bulletFixture) {
+        // Remove bullet
+        Bullet bullet = (Bullet) bulletFixture.getBody().getUserData();
+        if (bullet != null) {
+            bullet.markForRemoval();
+        }
+        removeBulletsQueue(bulletFixture);
+    }
+
     private void handleInput() {
         player.isMoving = false;
         boolean isSpacePressed = Gdx.input.isKeyPressed(Input.Keys.SPACE);
@@ -179,53 +181,6 @@ public class PlayingState extends GameState implements CollisionChecker{
 
     }
 
-    @Override
-    public boolean isCollidable(float x, float y) {
-
-        if (map == null || map.getLayers().get("Solid") == null) {
-            return false;
-        }
-
-        TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get("Solid");
-
-        // Convert world coordinates to tile coordinates
-        int tileX = (int) (x / layer.getTileWidth());
-        int tileY = (int) (y / layer.getTileHeight());
-
-        // Check if the tile coordinates are within the layer bounds
-        if (tileX < 0 || tileX >= layer.getWidth() || tileY < 0 || tileY >= layer.getHeight()) {
-            return false; // Outside the layer bounds
-        }
-
-        // Get the cell at the tile coordinates
-        TiledMapTileLayer.Cell cell = layer.getCell(tileX, tileY);
-
-        // Check if the cell and tile are not null, and if the tile has the "collidable" property
-        if (cell != null && cell.getTile() != null) {
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean isCollidingBelow(float x, float y, float width, float height) {
-        float playerBottom = y - height / 2; // Bottom of the player
-        float playerLeft = x - width / 4;
-        float playerRight = x + width / 4;
-
-        // Check the tiles below the player
-        return isCollidable(playerLeft, playerBottom - 1) || isCollidable(playerRight, playerBottom - 1);
-    }
-
-    @Override
-    public boolean isCollidingAbove(float x, float y, float width, float height) {
-        float playerTop = y + height; // Top edge of the player
-        float playerLeft = x;
-        float playerRight = x + width;
-
-        // Check the tiles above the player
-        return isCollidable(playerLeft, playerTop + 0.5f) || isCollidable(playerRight, playerTop + 0.5f);
-    }
 
     private void createCollisionTiles() {
         TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get("Solid");
@@ -253,6 +208,11 @@ public class PlayingState extends GameState implements CollisionChecker{
                     fixtureDef.density = 0.0f; // Static body
                     fixtureDef.friction = 0.5f;
 
+                    fixtureDef.filter.categoryBits = Constants.TILE_CATEGORY; // Tile category
+                    // Collide with player and bullets
+                    fixtureDef.filter.maskBits = Constants.BULLET_CATEGORY | Constants.PLAYER_CATEGORY;
+
+
                     Fixture groundFixture = body.createFixture(fixtureDef);
                     groundFixture.setUserData("ground");
 
@@ -262,7 +222,10 @@ public class PlayingState extends GameState implements CollisionChecker{
         }
     }
 
-
+    public void removeBulletsQueue(Fixture fixture) {
+        Body bulletBody = fixture.getBody();
+        bulletsToRemove.add(bulletBody);
+    }
 
 
 

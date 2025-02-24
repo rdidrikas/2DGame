@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 
 public class Bullet {
@@ -13,21 +14,15 @@ public class Bullet {
 
     private Body body; // Box2D body for physics
     private boolean active = true; // Track if the bullet is active
-    private float speed = 500f; // Bullet speed
+    private Vector2 startPosition;
 
     public Bullet(World world, float x, float y, float angle, Texture bulletSheet) {
-
-        animationManager = new AnimationManager();
-        loadBullet(bulletSheet);
 
         // Create a Box2D body for the bullet
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set(x, y);
         body = world.createBody(bodyDef);
-
-        // Load Animation
-
 
         // Define the bullet's collision shape
         CircleShape shape = new CircleShape();
@@ -36,40 +31,42 @@ public class Bullet {
         // Define the bullet's fixture
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
-        fixtureDef.density = 0.1f;
+        fixtureDef.density = 0f;
         fixtureDef.friction = 0f;
         fixtureDef.restitution = 0f;
 
+        // Set the bullet's collision category and with what it can collide
+        fixtureDef.filter.categoryBits = Constants.BULLET_CATEGORY; // Bullet
+        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY; // Tile collision
+
         // Attach the fixture to the body
-        body.createFixture(fixtureDef);
+        Fixture bulletFixture = body.createFixture(fixtureDef);
+        bulletFixture.setUserData("friendlyBullet");
+
+        body.setGravityScale(0);
+
         shape.dispose();
 
         // Set the bullet's velocity based on the angle
         body.setLinearVelocity(
-            (float) Math.cos(angle) * speed,
-            (float) Math.sin(angle) * speed
+            Constants.RAMBO_BULLET_SPEED,
+            0
         );
-
-        // Set user data for collision detection
-        body.setUserData(this);
-    }
-
-    public void loadBullet(Texture bulletSheet){
-
-        TextureRegion[][] tmpBulletFrames = TextureRegion.split(bulletSheet, 16, 16);
-
-        // Bullet animation
-        TextureRegion[] bulletFrames = {tmpBulletFrames[0][0], tmpBulletFrames[0][1], tmpBulletFrames[0][2]};
-        animationManager.addAnimation("bullet", new Animation<>(0.5f, bulletFrames));
+        // Store the starting position
+        startPosition = new Vector2(x, y);
 
     }
 
     public void update(float delta) {
-        // Deactivate the bullet if it goes off-screen
-        if (body.getPosition().x < 0 || body.getPosition().x > Gdx.graphics.getWidth() ||
-            body.getPosition().y < 0 || body.getPosition().y > Gdx.graphics.getHeight()) {
-            active = false;
+        // Deactivate the bullet if it goes too far
+        if (active) {
+            Vector2 currentPosition = body.getPosition();
+            float distanceTraveled = startPosition.dst(currentPosition);
+            if (distanceTraveled > Constants.RAMBO_BULLET_DISTANCE) {
+                this.active = false;
+            }
         }
+
     }
 
     public void render(SpriteBatch batch, TextureRegion bulletTexture) {
@@ -85,6 +82,10 @@ public class Bullet {
 
     public boolean isActive() {
         return active;
+    }
+
+    public void markForRemoval(){
+        active = false;
     }
 
     public void setActive(boolean active) {

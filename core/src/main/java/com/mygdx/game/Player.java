@@ -15,7 +15,6 @@ public class Player {
     private Body body;
     private Gun gun;
 
-    private CollisionChecker collisionChecker;
     private int tileSize;
 
 
@@ -36,8 +35,7 @@ public class Player {
     public boolean isFacingLeft = false;
 
 
-    public Player( CollisionChecker collisionChecker, int tileSize,
-                  World world, float x, float y, float width, float height) {
+    public Player(int tileSize, World world, float x, float y, float width, float height) {
 
         this.width = width;
         this.height = height;
@@ -48,7 +46,6 @@ public class Player {
         this.isOnGround = true;
         this.isMoving = false;
         this.isFiring = false;
-        this.collisionChecker = collisionChecker;
         this.tileSize = tileSize;
 
         animationManager = new AnimationManager();
@@ -78,6 +75,9 @@ public class Player {
         fixtureDef.density = 1f;
         fixtureDef.friction = 20f;
         fixtureDef.restitution = 0f;
+
+        fixtureDef.filter.categoryBits = Constants.PLAYER_CATEGORY;
+        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY;
 
         Fixture playerFixture = body.createFixture(fixtureDef);
         playerFixture.setUserData("player");
