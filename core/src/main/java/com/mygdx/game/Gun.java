@@ -70,7 +70,7 @@ public class Gun {
         Iterator<Bullet> iterator = bullets.iterator();
         while (iterator.hasNext()) {
             Bullet bullet = iterator.next();
-            bullet.update(delta);
+            bullet.update(delta, isFacingLeft);
             if (!bullet.isActive()) {
                 iterator.remove();
             }
@@ -82,14 +82,15 @@ public class Gun {
         TextureRegion currentGunFrame = animationManager.getCurrentGunFrame(isFacingLeft);
         batch.draw(currentGunFrame, playerX, playerY, 32, 32);
         for (Bullet bullet : bullets) {
-            bullet.render(batch, animationManager.getBulletFrame());
+
+            bullet.render(batch, animationManager.getBulletFrame(), isFacingLeft);
         }
     }
 
     public void fire(World world, float x, float y, float angle) {
         if(shotTimer <= 0){
             isFiring = true;
-            bullets.add(new Bullet(world, x, y, angle, bulletSheet));
+            bullets.add(new Bullet(world, x, y, angle, isFacingLeft));
             shotTimer = Constants.RAMBO_SHOT_COOLDOWN;
         }
 

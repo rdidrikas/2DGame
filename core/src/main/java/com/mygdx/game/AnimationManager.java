@@ -71,7 +71,8 @@ public class AnimationManager {
     }
 
     public TextureRegion getBulletFrame(){
-        return animations.get("bullet").getKeyFrame(stateTime, true);
+        TextureRegion frame = animations.get("bullet").getKeyFrame(stateTime, true);
+        return frame;
     }
 
 }

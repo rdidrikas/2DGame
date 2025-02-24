@@ -41,6 +41,7 @@ public class PlayingState extends GameState {
         super(gsm);
 
         world = new World(new Vector2(0, Constants.GRAVITY), true);
+        world.setContinuousPhysics(true);
         debugRenderer = new Box2DDebugRenderer();
 
         // Load map
@@ -62,7 +63,7 @@ public class PlayingState extends GameState {
     @Override
     public void update(float delta) {
 
-        world.step(delta, 6, 2);
+        world.step(delta, 8, 3);
 
         // Fixture body remover
         for (Body bullet : bulletsToRemove) {
@@ -114,11 +115,21 @@ public class PlayingState extends GameState {
         player.update(delta);
 
         // Update camera position
-        camera.position.set(
-            playerX,
-            playerY,
-            0
-        );
+
+        if (playerX < 200) {
+            camera.position.set(
+                200,
+                playerY,
+                0
+            );
+        } else {
+            camera.position.set(
+                playerX,
+                playerY,
+                0
+            );
+        }
+
         camera.update();
     }
 
@@ -139,7 +150,7 @@ public class PlayingState extends GameState {
         player.render(batch);
         batch.end();
 
-        //debugRenderer.render(world, camera.combined);
+        debugRenderer.render(world, camera.combined);
     }
 
     public void handleBulletTileCollision(Fixture bulletFixture) {
