@@ -75,7 +75,7 @@ public class Player {
         fixtureDef.friction = 20f;
         fixtureDef.restitution = 0f;
 
-        body.setLinearDamping(0.1f);
+        body.setLinearDamping(0f);
 
         fixtureDef.filter.categoryBits = Constants.PLAYER_CATEGORY;
         fixtureDef.filter.maskBits = Constants.TILE_CATEGORY;
@@ -199,8 +199,6 @@ public class Player {
     public Body getBody() {
         return body;
     }
-
-
 
     public boolean isGrounded() {
         // Use velocity or other checks instead of collision flags

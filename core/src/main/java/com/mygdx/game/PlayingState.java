@@ -74,13 +74,6 @@ public class PlayingState extends GameState {
 
         world.step(delta, 8, 3);
 
-        // Fixture body remover
-        for (Body bullet : bulletsToRemove) {
-            world.destroyBody(bullet); // Destroy the body (and its fixtures)
-        }
-        bulletsToRemove.clear(); // Clear the queue
-
-
         /*************** Collisions ***************/
 
         world.setContactListener(new ContactListener() {
@@ -94,16 +87,16 @@ public class PlayingState extends GameState {
                 Object userDataA = fixtureA.getUserData();
                 Object userDataB = fixtureB.getUserData();
 
-
-                if (userDataA.equals("friendlyBullet") && userDataB.equals("ground")) {
-                    handleBulletTileCollision(fixtureA);
-
-                    System.out.println("Bullet hit ground");
-                } else if (userDataA.equals("ground") && userDataB.equals("friendlyBullet")) {
-                    handleBulletTileCollision(fixtureB);
-                    System.out.println("Bullet hit ground");
+                if (userDataA instanceof Bullet) {
+                    ((Bullet) userDataA).markForRemoval();
+                    System.out.println("Bullet A marked for removal");
                 }
-                else if(userDataA.equals("player") && userDataB.equals("ground")){
+                if (userDataB instanceof Bullet) {
+                    ((Bullet) userDataB).markForRemoval();
+                    System.out.println("Bullet B marked for removal");
+                }
+
+                if(userDataA.equals("player") && userDataB.equals("ground")){
                     //System.out.println("Player hit ground");
                 } else if (userDataA.equals("ground") && userDataB.equals("player")) {
                     //System.out.println("Player hit ground");
@@ -153,7 +146,7 @@ public class PlayingState extends GameState {
         float playerY = player.getBody().getPosition().y;
         handleInput();
         player.update(delta);
-
+        spawner.update(Gdx.graphics.getDeltaTime(), player.getBody().getPosition());
 
 
         // Update camera position
@@ -204,14 +197,6 @@ public class PlayingState extends GameState {
         // debugRenderer.render(world, camera.combined);
     }
 
-    public void handleBulletTileCollision(Fixture bulletFixture) {
-        // Remove bullet
-        Bullet bullet = (Bullet) bulletFixture.getBody().getUserData();
-        if (bullet != null) {
-            bullet.markForRemoval();
-        }
-        removeBulletsQueue(bulletFixture);
-    }
 
     private void handleInput() {
         player.isMoving = false;
@@ -237,7 +222,7 @@ public class PlayingState extends GameState {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
             player.reset();
         }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.J)){
+        if (Gdx.input.isKeyPressed(Input.Keys.J)){
             player.fire();
         }
         if (Gdx.input.isKeyPressed(Input.Keys.K)){
@@ -283,11 +268,6 @@ public class PlayingState extends GameState {
                 }
             }
         }
-    }
-
-    public void removeBulletsQueue(Fixture fixture) {
-        Body bulletBody = fixture.getBody();
-        bulletsToRemove.add(bulletBody);
     }
 
 

@@ -15,6 +15,8 @@ public class Bullet {
     private boolean active = true; // Track if the bullet is active
     private Vector2 startPosition;
 
+    private boolean markedForRemoval = false;
+
 
     public Bullet(World world, float x, float y, float angle, boolean isFacingLeft) {
 
@@ -43,7 +45,8 @@ public class Bullet {
 
         // Attach the fixture to the body
         Fixture bulletFixture = body.createFixture(fixtureDef);
-        bulletFixture.setUserData("friendlyBullet");
+        bulletFixture.setUserData(this);
+        // body.setUserData("friendlyBullet");
 
         body.setGravityScale(0f);
         // body.applyLinearImpulse(new Vector2(Constants.RAMBO_BULLET_SPEED, 0), body.getWorldCenter(), true);
@@ -95,12 +98,17 @@ public class Bullet {
         return active;
     }
 
-    public void markForRemoval(){
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public void markForRemoval() {
+        markedForRemoval = true;
         active = false;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public boolean isMarkedForRemoval() {
+        return markedForRemoval;
     }
 
     public Body getBody() {

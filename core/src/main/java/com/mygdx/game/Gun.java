@@ -13,7 +13,7 @@ import com.badlogic.gdx.utils.Array;
 
 public class Gun {
 
-    private LinkedList<Bullet> bullets = new LinkedList<>();
+    public LinkedList<Bullet> bullets = new LinkedList<>();
     private Texture bulletSheet = new Texture("Animations/Bullet Friendly.png");
 
     private AnimationManager animationManager;
@@ -70,9 +70,10 @@ public class Gun {
         Iterator<Bullet> iterator = bullets.iterator();
         while (iterator.hasNext()) {
             Bullet bullet = iterator.next();
-            bullet.update(delta, isFacingLeft);
-            if (!bullet.isActive()) {
+            // bullet.update(delta, isFacingLeft);
+            if (bullet.isMarkedForRemoval()) {
                 iterator.remove();
+                System.out.println("Bullet removed here");
             }
         }
 

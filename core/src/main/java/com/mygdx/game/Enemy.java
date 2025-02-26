@@ -48,6 +48,8 @@ public class Enemy {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
+        fixtureDef.friction = 10f;
+        fixtureDef.restitution = 0f;
 
         fixtureDef.filter.categoryBits = Constants.ENEMY_CATEGORY;
         fixtureDef.filter.maskBits = Constants.TILE_CATEGORY;
@@ -76,13 +78,13 @@ public class Enemy {
     }
 
     public void update(float delta, Vector2 playerPosition){
-        Vector2 direction = new Vector2(
-            playerPosition.x - body.getPosition().x,
-            playerPosition.y - body.getPosition().y
-        ).nor(); // Normalize direction
-        isMoving = true;
-        animationManager.update(delta, true, false, false, 2);
-        body.setLinearVelocity(direction.x * Constants.ENEMY_SPEED, 0);
+        if (seesPlayer(playerPosition)) {
+            moveTowardsPlayer(delta, playerPosition);
+        } else {
+            isMoving = false;
+            body.setLinearVelocity(0, 0); // Stop moving
+        }
+        animationManager.update(delta, isGroundedEnemy(), isMoving, false, 2);
 
     }
 
@@ -106,8 +108,24 @@ public class Enemy {
     }
 
     public boolean seesPlayer(Vector2 playerPosition) {
-        float detectionRadius = 5f; // Meters
+        float detectionRadius = 3f; // Meters
         return body.getPosition().dst(playerPosition) <= detectionRadius;
+    }
+
+    public void moveTowardsPlayer(float delta, Vector2 playerPosition) {
+        if (playerPosition.x < body.getPosition().x) {
+            body.setLinearVelocity((isGroundedEnemy() ? -Constants.ENEMY_SPEED * Constants.PLAYER_SPEED_MID_AIR : -Constants.ENEMY_SPEED), 0);
+            enemyIsFacingLeft = true;
+        } else {
+            body.setLinearVelocity((isGroundedEnemy() ? Constants.ENEMY_SPEED * Constants.PLAYER_SPEED_MID_AIR : Constants.ENEMY_SPEED), 0);
+            enemyIsFacingLeft = false;
+        }
+        isMoving = true;
+    }
+
+    public boolean isGroundedEnemy() {
+        // Use velocity or other checks instead of collision flags
+        return (Math.abs(body.getLinearVelocity().y) < 0.01f && Math.abs(body.getLinearVelocity().y) > -0.01f); // Near-zero vertical velocity
     }
 
 }

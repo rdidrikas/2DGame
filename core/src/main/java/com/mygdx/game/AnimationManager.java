@@ -51,7 +51,7 @@ public class AnimationManager {
             }
         } else if(type == 2){
             if (isMoving) {
-                currentState = "enemyNomrmalWalk";
+                currentState = "enemyNormalWalk";
             } else {
                 currentState = "enemyNormalIdle";
             }
