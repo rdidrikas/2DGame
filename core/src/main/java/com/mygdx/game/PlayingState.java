@@ -194,7 +194,7 @@ public class PlayingState extends GameState {
 
         /*********** DEBUGGER **********/
 
-        // debugRenderer.render(world, camera.combined);
+        debugRenderer.render(world, camera.combined);
     }
 
 
@@ -225,7 +225,7 @@ public class PlayingState extends GameState {
         if (Gdx.input.isKeyPressed(Input.Keys.J)){
             player.fire();
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.K)){
+        if (Gdx.input.isKeyJustPressed(Input.Keys.K)){
             System.out.println("Player X: " + player.getBody().getPosition().x);
             spawner.spawnEnemy(player.getBody().getPosition().x, player.getBody().getPosition().y);
         }
@@ -252,8 +252,8 @@ public class PlayingState extends GameState {
                     Body body = world.createBody(bodyDef);
                     PolygonShape shape = new PolygonShape();
                     shape.setAsBox(
-                        tileWidthMeters / 2 - 0.01f,  // Half-width (meters)
-                        tileHeightMeters / 2 - 0.01f // Half-height (meters)
+                        tileWidthMeters / 2 - 0.02f,  // Half-width (meters)
+                        tileHeightMeters / 2  - 0.02f // Half-height (meters)
                     );
 
                     FixtureDef fixtureDef = new FixtureDef();

@@ -57,6 +57,9 @@ public class Enemy {
         Fixture enemyNormal = body.createFixture(fixtureDef);
         enemyNormal.setUserData("enemyNormal");
 
+        body.setGravityScale(1f);
+        body.setLinearDamping(0f);
+
         shape.dispose();
 
         loadAnimations();
@@ -114,10 +117,10 @@ public class Enemy {
 
     public void moveTowardsPlayer(float delta, Vector2 playerPosition) {
         if (playerPosition.x < body.getPosition().x) {
-            body.setLinearVelocity((isGroundedEnemy() ? -Constants.ENEMY_SPEED * Constants.PLAYER_SPEED_MID_AIR : -Constants.ENEMY_SPEED), 0);
+            body.setLinearVelocity((isGroundedEnemy() ? -Constants.ENEMY_SPEED * Constants.PLAYER_SPEED_MID_AIR : -Constants.ENEMY_SPEED), body.getLinearVelocity().y);
             enemyIsFacingLeft = true;
         } else {
-            body.setLinearVelocity((isGroundedEnemy() ? Constants.ENEMY_SPEED * Constants.PLAYER_SPEED_MID_AIR : Constants.ENEMY_SPEED), 0);
+            body.setLinearVelocity((isGroundedEnemy() ? Constants.ENEMY_SPEED * Constants.PLAYER_SPEED_MID_AIR : Constants.ENEMY_SPEED), body.getLinearVelocity().y);
             enemyIsFacingLeft = false;
         }
         isMoving = true;
