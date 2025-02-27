@@ -55,6 +55,14 @@ public class AnimationManager {
             } else {
                 currentState = "enemyNormalIdle";
             }
+        } else if (type == 3) {
+            if (isFiring) {
+                currentGunState = "enemyGunFire";
+            } else if (isMoving) {
+                currentGunState = "enemyGunWalk";
+            } else {
+                currentGunState = "enemyGunIdle";
+            }
         }
 
     }

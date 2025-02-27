@@ -24,8 +24,6 @@ public class PlayingState extends GameState {
     private Box2DDebugRenderer debugRenderer;
     private Player player;
     private EnemySpawner spawner;
-    private TextureRegion[][] dirtTiles;
-
     private TiledMap map;
     private OrthogonalTiledMapRenderer renderer;
     private OrthographicCamera camera;
@@ -194,7 +192,7 @@ public class PlayingState extends GameState {
 
         /*********** DEBUGGER **********/
 
-        debugRenderer.render(world, camera.combined);
+        // debugRenderer.render(world, camera.combined);
     }
 
 
@@ -252,13 +250,14 @@ public class PlayingState extends GameState {
                     Body body = world.createBody(bodyDef);
                     PolygonShape shape = new PolygonShape();
                     shape.setAsBox(
-                        tileWidthMeters / 2 - 0.02f,  // Half-width (meters)
-                        tileHeightMeters / 2  - 0.02f // Half-height (meters)
+                        tileWidthMeters / 2, // + 0.005f,  // Half-width (meters)
+                        tileHeightMeters / 2 //  - 0.02f // Half-height (meters)
                     );
 
                     FixtureDef fixtureDef = new FixtureDef();
                     fixtureDef.shape = shape;
                     fixtureDef.density = 0.0f;
+                    // fixtureDef.friction = 0.4f;
                     fixtureDef.filter.categoryBits = Constants.TILE_CATEGORY;
                     fixtureDef.filter.maskBits = Constants.BULLET_CATEGORY | Constants.PLAYER_CATEGORY | Constants.ENEMY_CATEGORY;
 

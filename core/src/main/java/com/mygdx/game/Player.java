@@ -72,7 +72,7 @@ public class Player {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
-        fixtureDef.friction = 20f;
+        fixtureDef.friction = 0.00001f;
         fixtureDef.restitution = 0f;
 
         body.setLinearDamping(0f);
@@ -113,6 +113,10 @@ public class Player {
 
         stateTime += delta;
 
+        if(!isMoving){
+            body.setLinearVelocity(0, body.getLinearVelocity().y); // PRevents sliding
+        }
+
         animationManager.update(delta, isGrounded(), isMoving, isFiring, 0); // player render animation
         gun.update(delta, isGrounded(), isMoving, isFiring, isFacingLeft); // render gun animation
 
@@ -121,7 +125,7 @@ public class Player {
             coyoteTimer = coyoteTime;
             canJump = true;
         } else {
-            System.out.println(body.getLinearVelocity().y);
+            // System.out.println(body.getLinearVelocity().y);
             coyoteTimer -= delta;
             if (coyoteTimer <= 0) {
                 canJump = false;
