@@ -224,8 +224,11 @@ public class PlayingState extends GameState {
             player.fire();
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.K)){
+            spawner.spawnEnemy();
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.L)){
             System.out.println("Player X: " + player.getBody().getPosition().x);
-            spawner.spawnEnemy(player.getBody().getPosition().x, player.getBody().getPosition().y);
+            System.out.println("Player Y: " + player.getBody().getPosition().y);
         }
 
     }

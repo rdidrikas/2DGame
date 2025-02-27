@@ -18,6 +18,7 @@ public class Enemy {
     private int health = 10;
     private boolean isMoving = false;
     private float width, height;
+    public String state;
 
     private AnimationManager animationManager;
     private boolean enemyIsFacingLeft;
@@ -71,19 +72,23 @@ public class Enemy {
         TextureRegion[][] tmpFrames = TextureRegion.split(playerSheet, 32, 32);
 
         Texture enemyGunSheet = new Texture("Animations/enemy_normal_gun_anim.png");
-        TextureRegion[][] tmpGunFrames = TextureRegion.split(playerSheet, 32, 32);
+        TextureRegion[][] tmpGunFrames = TextureRegion.split(enemyGunSheet, 32, 32);
 
         Texture enemyBulletSheet = new Texture("Animations/enemy_normal_gun_anim.png");
-        TextureRegion[][] tmpBulletFrames = TextureRegion.split(playerSheet, 16, 16);
+        TextureRegion[][] tmpBulletFrames = TextureRegion.split(enemyBulletSheet, 16, 16);
 
         // Gun animation idle
-        TextureRegion[] gunIdleFrames = {tmpGunFrames[1][2]};
-        animationManager.addAnimation("enemyGunIdle", new Animation<>(0.5f, gunIdleFrames));
+        TextureRegion[] gunIdleFrames = {tmpGunFrames[0][0], tmpGunFrames[0][0], tmpGunFrames[0][0], tmpGunFrames[2][0],
+            tmpGunFrames[2][1], tmpGunFrames[2][2], tmpGunFrames[2][3], tmpGunFrames[2][4] };
+        // tmpGunFrames[2][5], tmpGunFrames[2][6], tmpGunFrames[3][0],
+        // tmpGunFrames[3][1], tmpGunFrames[3][2], tmpGunFrames[3][3], tmpGunFrames[3][4], tmpGunFrames[3][5]};
+
+        animationManager.addAnimation("enemyGunIdle", new Animation<>(8f, gunIdleFrames));
 
         // Gun animation walk
         TextureRegion[] gunWalkFrames = {
-                tmpGunFrames[1][18], tmpGunFrames[1][20], tmpGunFrames[1][2],
-                tmpGunFrames[1][10], tmpGunFrames[1][15], tmpGunFrames[1][1]
+                tmpGunFrames[1][0], tmpGunFrames[1][2], tmpGunFrames[1][5],
+                tmpGunFrames[1][10], tmpGunFrames[1][15], tmpGunFrames[1][3]
         };
         animationManager.addAnimation("enemyGunWalk", new Animation<>(0.5f, gunWalkFrames));
 
@@ -97,7 +102,6 @@ public class Enemy {
         // Bullet animation
         TextureRegion[] bulletFrames = {tmpBulletFrames[0][0], tmpBulletFrames[0][1], tmpBulletFrames[0][2]};
         animationManager.addAnimation("enemyBullet", new Animation<>(0.5f, bulletFrames));
-
 
 
         // Idle (single frame)
@@ -131,8 +135,8 @@ public class Enemy {
 
         TextureRegion currentEnemyFrame = animationManager.getCurrentPlayerFrame(enemyIsFacingLeft);
         TextureRegion currentGunFrame = animationManager.getCurrentGunFrame(enemyIsFacingLeft);
-        batch.draw(currentGunFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
         batch.draw(currentEnemyFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
+        batch.draw(currentGunFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
     }
 
     public void takeDamage(int damage) {

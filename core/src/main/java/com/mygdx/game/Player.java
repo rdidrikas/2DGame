@@ -209,6 +209,4 @@ public class Player {
         return (Math.abs(body.getLinearVelocity().y) < 0.01f && Math.abs(body.getLinearVelocity().y) > -0.01f); // Near-zero vertical velocity
     }
 
-
-
 }
