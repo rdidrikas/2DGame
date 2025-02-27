@@ -11,19 +11,22 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import org.lwjgl.Sys;
 
+import static java.lang.Math.abs;
+
 public class Enemy {
 
     private Body body;
+    private Player player;
 
     private int health = 10;
     private boolean isMoving = false;
     private float width, height;
-    public String state;
+    public String currentState;
 
     private AnimationManager animationManager;
     private boolean enemyIsFacingLeft;
 
-    public Enemy(World world, float x, float y) {
+    public Enemy(World world, float x, float y, Player player) {
 
         enemyIsFacingLeft = false;
         isMoving = false;
@@ -166,7 +169,25 @@ public class Enemy {
 
     public boolean isGroundedEnemy() {
         // Use velocity or other checks instead of collision flags
-        return (Math.abs(body.getLinearVelocity().y) < 0.01f && Math.abs(body.getLinearVelocity().y) > -0.01f); // Near-zero vertical velocity
+        return (abs(body.getLinearVelocity().y) < 0.01f && abs(body.getLinearVelocity().y) > -0.01f); // Near-zero vertical velocity
+    }
+
+    private boolean hasLineOfSight() {
+
+        float xDiff = player.getBody().getPosition().x - body.getPosition().x;
+        return abs(xDiff) < 0.2;
+    }
+
+    private void detectPlayer() {
+
+        float detectionRadius = 3f; // Meters
+        float distance = body.getPosition().dst(player.getBody().getPosition());
+
+        if (distance <= detectionRadius && hasLineOfSight()) {
+            currentState = State.ATTACK;
+        } else {
+            currentState = State.PATROL;
+        }
     }
 
 }

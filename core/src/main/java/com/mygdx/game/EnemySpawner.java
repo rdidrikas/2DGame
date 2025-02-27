@@ -10,9 +10,10 @@ public class EnemySpawner {
     private Array<Enemy> enemies = new Array<>();
     private Array<Vector2> spawnPoints = new Array<>();
     private World world;
+    private Player player;
     private Array<Vector2> enemiesLevel1 = new Array<>();
 
-    public EnemySpawner(World world) {
+    public EnemySpawner(World world, Player player) {
         this.world = world;
 
         enemiesLevel1.add(new Vector2(9, 6.85f));
@@ -28,7 +29,7 @@ public class EnemySpawner {
 
     public void spawnEnemy() {
         for (Vector2 pos : spawnPoints) {
-            enemies.add(new Enemy(world, pos.x, pos.y));
+            enemies.add(new Enemy(world, pos.x, pos.y, player));
         }
     }
 
