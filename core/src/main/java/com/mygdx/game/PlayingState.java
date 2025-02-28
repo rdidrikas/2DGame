@@ -245,6 +245,8 @@ public class PlayingState extends GameState {
         for (int y = 0; y < layer.getHeight(); y++) {
             Integer segmentStart = null;
 
+            float worldY = (layer.getHeight() - y - 1) * tileHeight; // Places collision at the top of tiles instead of bottom
+
             // Scan through tiles + 1 extra column to catch final segment
             for (int x = 0; x <= layer.getWidth(); x++) {
                 boolean isSolid = x < layer.getWidth() && layer.getCell(x, y) != null;
@@ -266,15 +268,15 @@ public class PlayingState extends GameState {
         List<Vector2> vertices = new ArrayList<>();
 
         // Add start ghost vertex (left edge of first tile's ghost)
-        vertices.add(new Vector2((startX - 1) * tileWidth, y * tileHeight));
+        vertices.add(new Vector2(startX * tileWidth, y * tileHeight));
 
         // Add main platform vertices
         for (int x = startX; x <= endX + 1; x++) {
-            vertices.add(new Vector2(x * tileWidth, y * tileHeight));
+            vertices.add(new Vector2(x * tileWidth, y * tileHeight + tileHeight)); // main platform need to be top of the tile
         }
 
         // Add end ghost vertex (right edge of last tile's ghost)
-        vertices.add(new Vector2((endX + 2) * tileWidth, y * tileHeight));
+        vertices.add(new Vector2((endX + 1) * tileWidth, y * tileHeight));
 
         // Remove consecutive duplicates
         List<Vector2> cleaned = new ArrayList<>();

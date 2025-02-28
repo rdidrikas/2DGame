@@ -51,13 +51,12 @@ public class Player {
         gun = new Gun();
 
 
+
+        float collisionBoxWidth = width / 3.5f;
+        float collisionBoxHeight = height / 1.5f;
+
         // Calculate offset to align collision box with sprite's feet
-
-        // Create a capsule shape (rounded bottom)
-        float radius = width / 3.5f / 2f; // Half of collisionBoxWidth
-        float capsuleHeight = height / 1.5f - radius;
-
-        float yOffset = (height - capsuleHeight) / 2;
+        float yOffset = (height - collisionBoxHeight) / 2;
 
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -65,48 +64,27 @@ public class Player {
         bodyDef.fixedRotation = true;
 
         body = world.createBody(bodyDef);
-
-        // Bottom circle
-        CircleShape circleShape = new CircleShape();
-        circleShape.setRadius(radius);
-        circleShape.setPosition(new Vector2(0, -capsuleHeight / 2));
-
-        // Body rectangle
-        PolygonShape boxShape = new PolygonShape();
-        boxShape.setAsBox(radius, capsuleHeight / 2, new Vector2(0, capsuleHeight / 2), 0);
-
-
-
-        FixtureDef circleFixtureDef = new FixtureDef();
-        circleFixtureDef.shape = circleShape;
-        circleFixtureDef.density = 1f;
-        circleFixtureDef.friction = 0.1f;
-        circleFixtureDef.restitution = 0f;
-
-        FixtureDef boxFixtureDef = new FixtureDef();
-        boxFixtureDef.shape = boxShape;
-        boxFixtureDef.density = 1f;
-        boxFixtureDef.friction = 0.1f;
-
         body.setBullet(true);
+        PolygonShape shape = new PolygonShape();
+        shape.setAsBox(collisionBoxWidth / 2,
+            collisionBoxHeight / 2);
+
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = shape;
+        fixtureDef.density = 1f;
+        fixtureDef.friction = 0.00001f;
+        fixtureDef.restitution = 0f;
+
         body.setLinearDamping(0f);
 
-        boxFixtureDef.filter.categoryBits = Constants.PLAYER_CATEGORY;
-        boxFixtureDef.filter.maskBits = Constants.TILE_CATEGORY;
-        circleFixtureDef.filter.categoryBits = Constants.PLAYER_CATEGORY;
-        circleFixtureDef.filter.maskBits = Constants.TILE_CATEGORY;
+        fixtureDef.filter.categoryBits = Constants.PLAYER_CATEGORY;
+        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY;
 
-        Fixture circlePlayerFixture = body.createFixture(circleFixtureDef);
-        Fixture boxPlayerFixture = body.createFixture(boxFixtureDef);
+        Fixture playerFixture = body.createFixture(fixtureDef);
+        playerFixture.setUserData("player");
 
-        circlePlayerFixture.setUserData("player");
-        boxPlayerFixture.setUserData("player");
+        shape.dispose();
 
-        body.setUserData("player");
-
-
-        circleShape.dispose();
-        boxShape.dispose();
 
     }
 
