@@ -18,6 +18,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PlayingState extends GameState {
 
     private World world;
@@ -236,36 +239,39 @@ public class PlayingState extends GameState {
 
     private void createCollisionTiles() {
         TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get("Solid");
-        float tileWidthMeters = layer.getTileWidth() / Constants.PPM;  // *** PPM CHANGE
-        float tileHeightMeters = layer.getTileHeight() / Constants.PPM; // ***
+        float tileWidth = layer.getTileWidth() / Constants.PPM;
+        float tileHeight = layer.getTileHeight() / Constants.PPM;
 
+        // Iterate through all cells in the layer
         for (int y = 0; y < layer.getHeight(); y++) {
             for (int x = 0; x < layer.getWidth(); x++) {
                 TiledMapTileLayer.Cell cell = layer.getCell(x, y);
                 if (cell != null) {
+                    // Create a body for each individual tile
                     BodyDef bodyDef = new BodyDef();
                     bodyDef.type = BodyDef.BodyType.StaticBody;
+                    // Position the body at the center of the tile (converted to meters)
                     bodyDef.position.set(
-                        (x + 0.5f) * tileWidthMeters, // Center X (meters)
-                        (y + 0.5f) * tileHeightMeters  // Center Y (meters)
+                        (x * tileWidth) + tileWidth / 2,
+                        (y * tileHeight) + tileHeight / 2
                     );
 
-                    Body body = world.createBody(bodyDef);
+                    Body groundBody = world.createBody(bodyDef);
+
+                    // Create a box shape matching the tile size
                     PolygonShape shape = new PolygonShape();
-                    shape.setAsBox(
-                        tileWidthMeters / 2, // + 0.005f,  // Half-width (meters)
-                        tileHeightMeters / 2 //  - 0.02f // Half-height (meters)
-                    );
+                    shape.setAsBox(tileWidth / 2, tileHeight / 2);
 
                     FixtureDef fixtureDef = new FixtureDef();
                     fixtureDef.shape = shape;
-                    fixtureDef.density = 0.0f;
-                    // fixtureDef.friction = 0.4f;
-                    fixtureDef.filter.categoryBits = Constants.TILE_CATEGORY;
-                    fixtureDef.filter.maskBits = Constants.BULLET_CATEGORY | Constants.PLAYER_CATEGORY | Constants.ENEMY_CATEGORY;
+                    fixtureDef.friction = 0.4f;
 
-                    Fixture groundFixture = body.createFixture(fixtureDef);
-                    groundFixture.setUserData("ground");
+                    fixtureDef.filter.categoryBits = Constants.TILE_CATEGORY;
+                    fixtureDef.filter.maskBits = Constants.PLAYER_CATEGORY | Constants.ENEMY_CATEGORY | Constants.BULLET_CATEGORY;
+
+                    Fixture fixture = groundBody.createFixture(fixtureDef);
+                    fixture.setUserData("ground");
+
                     shape.dispose();
                 }
             }
