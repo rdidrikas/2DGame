@@ -192,7 +192,7 @@ public class PlayingState extends GameState {
 
         /*********** DEBUGGER **********/
 
-        // debugRenderer.render(world, camera.combined);
+        debugRenderer.render(world, camera.combined);
     }
 
 

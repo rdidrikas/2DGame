@@ -173,7 +173,6 @@ public class Enemy {
     }
 
     private boolean hasLineOfSight() {
-
         float xDiff = player.getBody().getPosition().x - body.getPosition().x;
         return abs(xDiff) < 0.2;
     }
@@ -184,9 +183,9 @@ public class Enemy {
         float distance = body.getPosition().dst(player.getBody().getPosition());
 
         if (distance <= detectionRadius && hasLineOfSight()) {
-            currentState = State.ATTACK;
+            //currentState = State.ATTACK;
         } else {
-            currentState = State.PATROL;
+            // currentState = State.PATROL;
         }
     }
 
