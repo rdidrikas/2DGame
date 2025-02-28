@@ -1,15 +1,15 @@
 package com.mygdx.game;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
-import org.lwjgl.Sys;
+
+import java.util.LinkedList;
 
 import static java.lang.Math.abs;
 
@@ -17,16 +17,29 @@ public class Enemy {
 
     private Body body;
     private Player player;
+    private World world;
 
     private int health = 10;
     private boolean isMoving = false;
     private float width, height;
-    public String currentState;
+
+    private enum State { PATROL, ATTACK }
+    private State currentState = State.PATROL;
+    private Vector2 patrolTarget;
+    private float shootTimer = 0;
+    private boolean isFiring = false;
+    private float patrolCooldown = 0;
 
     private AnimationManager animationManager;
     private boolean enemyIsFacingLeft;
 
+    public LinkedList<EnemyBullet> bullets = new LinkedList<EnemyBullet>();
+    private Texture enemyBulletSheet = new Texture("Animations/Bullet Friendly.png");
+
     public Enemy(World world, float x, float y, Player player) {
+
+        this.player = player;
+        this.world = world;
 
         enemyIsFacingLeft = false;
         isMoving = false;
@@ -67,6 +80,8 @@ public class Enemy {
         shape.dispose();
 
         loadAnimations();
+        setRandomPatrolTarget();
+
     }
 
     private void loadAnimations(){
@@ -77,7 +92,7 @@ public class Enemy {
         Texture enemyGunSheet = new Texture("Animations/enemy_normal_gun_anim.png");
         TextureRegion[][] tmpGunFrames = TextureRegion.split(enemyGunSheet, 32, 32);
 
-        Texture enemyBulletSheet = new Texture("Animations/enemy_normal_gun_anim.png");
+        Texture enemyBulletSheet = new Texture("Animations/Bullet Friendly.png");
         TextureRegion[][] tmpBulletFrames = TextureRegion.split(enemyBulletSheet, 16, 16);
 
         // Gun animation idle
@@ -115,17 +130,22 @@ public class Enemy {
         TextureRegion[] walkFrames = { tmpFrames[0][1], tmpFrames[0][2], tmpFrames[0][3] };
         animationManager.addAnimation("enemyNormalWalk", new Animation<>(0.3f, walkFrames));
 
+
     }
 
-    public void update(float delta, Vector2 playerPosition){
-        if (seesPlayer(playerPosition)) {
-            moveTowardsPlayer(delta, playerPosition);
-        } else {
-            isMoving = false;
-            body.setLinearVelocity(0, 0); // Stop moving
+    public void update(float delta, Vector2 playerPosition) {
+
+        bullets.removeIf(bullet -> !bullet.isActive());
+        for (EnemyBullet bullet : bullets) {
+            bullet.update(delta);
         }
-        animationManager.update(delta, isGroundedEnemy(), isMoving, false, 2);
-        animationManager.update(delta, isGroundedEnemy(), isMoving, false, 3);
+
+
+        detectPlayer();
+        handleState(delta);
+
+        animationManager.update(delta, isGroundedEnemy(), isMoving, isFiring, 2);
+        animationManager.update(delta, isGroundedEnemy(), isMoving, isFiring, 3);
 
 
     }
@@ -138,34 +158,18 @@ public class Enemy {
 
         TextureRegion currentEnemyFrame = animationManager.getCurrentPlayerFrame(enemyIsFacingLeft);
         TextureRegion currentGunFrame = animationManager.getCurrentGunFrame(enemyIsFacingLeft);
+
         batch.draw(currentEnemyFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
         batch.draw(currentGunFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
-    }
 
-    public void takeDamage(int damage) {
-        health -= damage;
-        if (health <= 0) destroy();
+        for (EnemyBullet bullet : bullets) {
+            bullet.render(batch, animationManager.getBulletFrame("enemyBullet"), enemyIsFacingLeft);
+        }
     }
-
     private void destroy() {
         // Remove the enemy from the world
     }
 
-    public boolean seesPlayer(Vector2 playerPosition) {
-        float detectionRadius = 3f; // Meters
-        return body.getPosition().dst(playerPosition) <= detectionRadius;
-    }
-
-    public void moveTowardsPlayer(float delta, Vector2 playerPosition) {
-        if (playerPosition.x < body.getPosition().x) {
-            body.setLinearVelocity((isGroundedEnemy() ? -Constants.ENEMY_SPEED * Constants.PLAYER_SPEED_MID_AIR : -Constants.ENEMY_SPEED), body.getLinearVelocity().y);
-            enemyIsFacingLeft = true;
-        } else {
-            body.setLinearVelocity((isGroundedEnemy() ? Constants.ENEMY_SPEED * Constants.PLAYER_SPEED_MID_AIR : Constants.ENEMY_SPEED), body.getLinearVelocity().y);
-            enemyIsFacingLeft = false;
-        }
-        isMoving = true;
-    }
 
     public boolean isGroundedEnemy() {
         // Use velocity or other checks instead of collision flags
@@ -183,10 +187,76 @@ public class Enemy {
         float distance = body.getPosition().dst(player.getBody().getPosition());
 
         if (distance <= detectionRadius && hasLineOfSight()) {
-            //currentState = State.ATTACK;
+            currentState = State.ATTACK;
         } else {
-            // currentState = State.PATROL;
+            currentState = State.PATROL;
         }
+    }
+
+    private void handleState(float delta) {
+        switch (currentState) {
+            case PATROL:
+                patrol(delta);
+                break;
+            case ATTACK:
+                attack(delta);
+                break;
+        }
+    }
+
+    private void setRandomPatrolTarget() {
+        patrolCooldown = 5f;
+        patrolTarget = new Vector2(
+            body.getPosition().x + MathUtils.random(-3, 3),
+            body.getPosition().y
+        );
+    }
+
+    private void patrol(float delta) {
+        // Basic patrol logic
+
+        patrolCooldown -= delta;
+
+        isFiring = false;
+
+        Vector2 direction = new Vector2(patrolTarget).sub(body.getPosition()).nor();
+        body.setLinearVelocity(Constants.ENEMY_SPEED * direction.x, body.getLinearVelocity().y);
+        isMoving = true;
+
+        if (body.getPosition().dst(patrolTarget) < 0.2f) {
+            isMoving = false;
+            if(patrolCooldown <= 0){
+                setRandomPatrolTarget();
+            }
+        }
+    }
+
+    private void attack(float delta) {
+        // Stop moving when attacking
+        body.setLinearVelocity(0, 0);
+        isMoving = false;
+        enemyIsFacingLeft = player.getBody().getPosition().x < 0; // Face Player
+
+        shootTimer -= delta;
+        if (shootTimer <= 0) {
+            shoot();
+            shootTimer = Constants.ENEMY_SHOT_COOLDOWN;
+            System.out.println("Enemy shot");
+        }
+    }
+
+    public void shoot(){
+
+        isFiring = true;
+
+        Vector2 playerPos = player.getBody().getPosition();
+        Vector2 direction = new Vector2(playerPos).sub(body.getPosition()).nor();
+
+        // Create projectile (similar to player bullets)
+        float offsetX = enemyIsFacingLeft ? -0.3f : 0.3f;
+        Vector2 spawnPos = body.getPosition().cpy().add(offsetX, 0);
+
+        bullets.add(new EnemyBullet(world, spawnPos.x, spawnPos.y, enemyIsFacingLeft, direction));
     }
 
 }

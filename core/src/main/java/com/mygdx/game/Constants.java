@@ -17,6 +17,7 @@ public class Constants {
     public static final short BULLET_CATEGORY = 0x0002;
     public static final short TILE_CATEGORY = 0x0004;
     public static final short ENEMY_CATEGORY = 0x0008;
+    public static final short ENEMY_BULLET_CATEGORY = 0x0010;
 
 
     // Rambo constants
@@ -32,6 +33,7 @@ public class Constants {
     public static final int ENEMY_DAMAGE = 10;
     public static final float ENEMY_SHOT_COOLDOWN = 1.5f; // Seconds
     public static final float ENEMY_BULLET_SPEED = 7f;
+    public static final float ENEMY_BULLET_ALIVE_TIME = 2f;
 
 
 }

@@ -47,7 +47,7 @@ public class PlayingState extends GameState {
         renderer = new OrthogonalTiledMapRenderer(map, 1 / Constants.PPM);
         // *** PPM CHANGE: Scale map renderer to meters
 
-        spawner = new EnemySpawner(world, player);
+
 
         createCollisionTiles();
 
@@ -59,6 +59,8 @@ public class PlayingState extends GameState {
             32 / Constants.PPM,   // Width (meters)
             32 / Constants.PPM    // Height (meters)
         );
+
+        spawner = new EnemySpawner(world, player);
 
         // Set camera viewport to METERS
         camera = new OrthographicCamera();
@@ -166,9 +168,8 @@ public class PlayingState extends GameState {
             );
         }
 
-
-
         camera.update();
+
     }
 
     @Override

@@ -9,8 +9,6 @@ import static java.lang.Math.abs;
 
 public class Bullet {
 
-    private AnimationManager animationManager;
-
     private Body body; // Box2D body for physics
     private boolean active = true; // Track if the bullet is active
     private Vector2 startPosition;
@@ -41,7 +39,7 @@ public class Bullet {
 
         // Set the bullet's collision category and with what it can collide
         fixtureDef.filter.categoryBits = Constants.BULLET_CATEGORY; // Bullet
-        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY; // Tile collision
+        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY | Constants.ENEMY_CATEGORY; // Tile collision
 
         // Attach the fixture to the body
         Fixture bulletFixture = body.createFixture(fixtureDef);

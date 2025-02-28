@@ -85,9 +85,8 @@ public class AnimationManager {
         return flippedFrame;
     }
 
-    public TextureRegion getBulletFrame(){
-        TextureRegion frame = animations.get("bullet").getKeyFrame(stateTime, true);
-        return frame;
+    public TextureRegion getBulletFrame(String name) {
+        return animations.get(name).getKeyFrame(stateTime, true);
     }
 
 }

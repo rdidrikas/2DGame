@@ -15,6 +15,7 @@ public class EnemySpawner {
 
     public EnemySpawner(World world, Player player) {
         this.world = world;
+        this.player = player;
 
         enemiesLevel1.add(new Vector2(9, 6.85f));
         enemiesLevel1.add(new Vector2(10, 6.85f));
