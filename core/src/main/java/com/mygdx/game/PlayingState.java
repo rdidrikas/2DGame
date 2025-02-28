@@ -242,43 +242,76 @@ public class PlayingState extends GameState {
         float tileWidth = layer.getTileWidth() / Constants.PPM;
         float tileHeight = layer.getTileHeight() / Constants.PPM;
 
-        // Iterate through all cells in the layer
         for (int y = 0; y < layer.getHeight(); y++) {
-            for (int x = 0; x < layer.getWidth(); x++) {
-                TiledMapTileLayer.Cell cell = layer.getCell(x, y);
-                if (cell != null) {
-                    // Create a body for each individual tile
-                    BodyDef bodyDef = new BodyDef();
-                    bodyDef.type = BodyDef.BodyType.StaticBody;
-                    // Position the body at the center of the tile (converted to meters)
-                    bodyDef.position.set(
-                        (x * tileWidth) + tileWidth / 2,
-                        (y * tileHeight) + tileHeight / 2
-                    );
+            Integer segmentStart = null;
 
-                    Body groundBody = world.createBody(bodyDef);
+            // Scan through tiles + 1 extra column to catch final segment
+            for (int x = 0; x <= layer.getWidth(); x++) {
+                boolean isSolid = x < layer.getWidth() && layer.getCell(x, y) != null;
 
-                    // Create a box shape matching the tile size
-                    PolygonShape shape = new PolygonShape();
-                    shape.setAsBox(tileWidth / 2, tileHeight / 2);
-
-                    FixtureDef fixtureDef = new FixtureDef();
-                    fixtureDef.shape = shape;
-                    fixtureDef.friction = 0.4f;
-
-                    fixtureDef.filter.categoryBits = Constants.TILE_CATEGORY;
-                    fixtureDef.filter.maskBits = Constants.PLAYER_CATEGORY | Constants.ENEMY_CATEGORY | Constants.BULLET_CATEGORY;
-
-                    Fixture fixture = groundBody.createFixture(fixtureDef);
-                    fixture.setUserData("ground");
-
-                    shape.dispose();
+                if (isSolid && segmentStart == null) {
+                    // Start new segment
+                    segmentStart = x;
+                }
+                else if (!isSolid && segmentStart != null) {
+                    // End current segment
+                    createSegment(y, segmentStart, x-1, tileWidth, tileHeight);
+                    segmentStart = null;
                 }
             }
         }
     }
 
+    private void createSegment(int y, int startX, int endX, float tileWidth, float tileHeight) {
+        List<Vector2> vertices = new ArrayList<>();
 
+        // Add start ghost vertex (left edge of first tile's ghost)
+        vertices.add(new Vector2((startX - 1) * tileWidth, y * tileHeight));
+
+        // Add main platform vertices
+        for (int x = startX; x <= endX + 1; x++) {
+            vertices.add(new Vector2(x * tileWidth, y * tileHeight));
+        }
+
+        // Add end ghost vertex (right edge of last tile's ghost)
+        vertices.add(new Vector2((endX + 2) * tileWidth, y * tileHeight));
+
+        // Remove consecutive duplicates
+        List<Vector2> cleaned = new ArrayList<>();
+        Vector2 last = null;
+        for (Vector2 v : vertices) {
+            if (last == null || !v.equals(last)) {
+                cleaned.add(v);
+                last = v;
+            }
+        }
+
+        if (cleaned.size() >= 2) {
+            createChainBody(cleaned);
+        }
+    }
+
+    private void createChainBody(List<Vector2> vertices) {
+        ChainShape chain = new ChainShape();
+        Vector2[] vertArray = vertices.toArray(new Vector2[0]);
+        chain.createChain(vertArray);
+
+        BodyDef bodyDef = new BodyDef();
+        bodyDef.type = BodyDef.BodyType.StaticBody;
+        Body groundBody = world.createBody(bodyDef);
+
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = chain;
+        fixtureDef.friction = 0.4f;
+
+        fixtureDef.filter.categoryBits = Constants.TILE_CATEGORY;
+        fixtureDef.filter.maskBits = Constants.PLAYER_CATEGORY | Constants.ENEMY_CATEGORY | Constants.BULLET_CATEGORY;
+
+        Fixture fixture = groundBody.createFixture(fixtureDef);
+        fixture.setUserData("ground");
+
+        chain.dispose();
+    }
 
     @Override
     public void dispose() {
