@@ -33,9 +33,9 @@ public class Bullet {
         // Define the bullet's fixture
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
-        fixtureDef.density = 1f;
+        fixtureDef.density = 0f;
         fixtureDef.friction = 0f;
-        fixtureDef.restitution = 0f;
+        //fixtureDef.restitution = 0f;
 
         // Set the bullet's collision category and with what it can collide
         fixtureDef.filter.categoryBits = Constants.BULLET_CATEGORY; // Bullet
@@ -58,7 +58,6 @@ public class Bullet {
 
         // Set the bullet's velocity based on the angle
 
-        System.out.println("Bullet Velocity: " + body.getLinearVelocity());
 
         // Store the starting position
         startPosition = new Vector2(x, y);

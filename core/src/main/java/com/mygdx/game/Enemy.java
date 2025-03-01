@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import static java.lang.Math.abs;
@@ -69,7 +70,7 @@ public class Enemy {
         fixtureDef.restitution = 0f;
 
         fixtureDef.filter.categoryBits = Constants.ENEMY_CATEGORY;
-        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY;
+        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY | Constants.BULLET_CATEGORY | Constants.PLAYER_CATEGORY;
 
         Fixture enemyNormal = body.createFixture(fixtureDef);
         enemyNormal.setUserData("enemyNormal");
@@ -135,7 +136,6 @@ public class Enemy {
 
     public void update(float delta, Vector2 playerPosition) {
 
-        bullets.removeIf(bullet -> !bullet.isActive());
         for (EnemyBullet bullet : bullets) {
             bullet.update(delta);
         }
@@ -147,6 +147,14 @@ public class Enemy {
         animationManager.update(delta, isGroundedEnemy(), isMoving, isFiring, 2);
         animationManager.update(delta, isGroundedEnemy(), isMoving, isFiring, 3);
 
+        Iterator<EnemyBullet> iterator = bullets.iterator();
+        while (iterator.hasNext()) {
+            EnemyBullet bullet = iterator.next();
+            if (bullet.isMarkedForRemoval()) {
+                iterator.remove();
+                System.out.println("Bullet removed here");
+            }
+        }
 
     }
 
@@ -177,7 +185,7 @@ public class Enemy {
     }
 
     private boolean hasLineOfSight() {
-        float xDiff = player.getBody().getPosition().x - body.getPosition().x;
+        float xDiff = player.getBody().getPosition().y - body.getPosition().y;
         return abs(xDiff) < 0.2;
     }
 
@@ -235,7 +243,7 @@ public class Enemy {
         // Stop moving when attacking
         body.setLinearVelocity(0, 0);
         isMoving = false;
-        enemyIsFacingLeft = player.getBody().getPosition().x < 0; // Face Player
+        enemyIsFacingLeft = player.getBody().getPosition().x <= body.getPosition().x; // Face Player
 
         shootTimer -= delta;
         if (shootTimer <= 0) {
@@ -250,13 +258,13 @@ public class Enemy {
         isFiring = true;
 
         Vector2 playerPos = player.getBody().getPosition();
-        Vector2 direction = new Vector2(playerPos).sub(body.getPosition()).nor();
+        boolean playerIsLeft = playerPos.x < body.getPosition().x;
 
         // Create projectile (similar to player bullets)
         float offsetX = enemyIsFacingLeft ? -0.3f : 0.3f;
         Vector2 spawnPos = body.getPosition().cpy().add(offsetX, 0);
 
-        bullets.add(new EnemyBullet(world, spawnPos.x, spawnPos.y, enemyIsFacingLeft, direction));
+        bullets.add(new EnemyBullet(world, spawnPos.x, spawnPos.y, enemyIsFacingLeft, playerIsLeft));
     }
 
 }

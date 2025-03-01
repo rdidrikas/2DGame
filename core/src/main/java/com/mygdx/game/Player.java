@@ -78,7 +78,7 @@ public class Player {
         body.setLinearDamping(0f);
 
         fixtureDef.filter.categoryBits = Constants.PLAYER_CATEGORY;
-        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY;
+        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY | Constants.ENEMY_BULLET_CATEGORY | Constants.ENEMY_CATEGORY;
 
         Fixture playerFixture = body.createFixture(fixtureDef);
         playerFixture.setUserData("player");

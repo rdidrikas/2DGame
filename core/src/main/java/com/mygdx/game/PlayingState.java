@@ -99,11 +99,21 @@ public class PlayingState extends GameState {
                     System.out.println("Bullet B marked for removal");
                 }
 
-                if(userDataA.equals("player") && userDataB.equals("ground")){
-                    //System.out.println("Player hit ground");
-                } else if (userDataA.equals("ground") && userDataB.equals("player")) {
-                    //System.out.println("Player hit ground");
+                if (userDataA instanceof EnemyBullet) {
+                    ((EnemyBullet) userDataA).markForRemoval();
+                    System.out.println("Bullet A marked for removal");
                 }
+                if (userDataB instanceof EnemyBullet) {
+                    ((EnemyBullet) userDataB).markForRemoval();
+                    System.out.println("Bullet B marked for removal");
+                }
+
+                if(userDataA == "bullet" && userDataB == "enemy"){
+                    System.out.println("Bullet hit enemy");
+                } else if (userDataA == "enemy" && userDataB == "bullet"){
+                    System.out.println("Bullet hit enemy");
+                }
+
 
             }
 
@@ -117,17 +127,6 @@ public class PlayingState extends GameState {
 
 
 
-                if(userDataA.equals("player") && userDataB.equals("ground")){
-                    if(!player.isGrounded()){
-                        System.out.println("Player left ground");
-                    }
-                } else if (userDataA.equals("ground") && userDataB.equals("player")) {
-                    if(!player.isGrounded()){
-                        System.out.println("Player left ground");
-                    }
-                }
-
-
             }
 
             @Override
@@ -138,10 +137,6 @@ public class PlayingState extends GameState {
             @Override
             public void postSolve(Contact contact, ContactImpulse impulse) {
                 // Handle post-solve
-            }
-            private boolean isFootSensorContact(Fixture a, Fixture b) {
-                return (a.getUserData() == "foot" && b.getUserData() == "ground") ||
-                    (b.getUserData() == "foot" && a.getUserData() == "ground");
             }
         });
 
@@ -246,8 +241,6 @@ public class PlayingState extends GameState {
         for (int y = 0; y < layer.getHeight(); y++) {
             Integer segmentStart = null;
 
-            float worldY = (layer.getHeight() - y - 1) * tileHeight; // Places collision at the top of tiles instead of bottom
-
             // Scan through tiles + 1 extra column to catch final segment
             for (int x = 0; x <= layer.getWidth(); x++) {
                 boolean isSolid = x < layer.getWidth() && layer.getCell(x, y) != null;
@@ -308,7 +301,7 @@ public class PlayingState extends GameState {
         fixtureDef.friction = 0.4f;
 
         fixtureDef.filter.categoryBits = Constants.TILE_CATEGORY;
-        fixtureDef.filter.maskBits = Constants.PLAYER_CATEGORY | Constants.ENEMY_CATEGORY | Constants.BULLET_CATEGORY;
+        fixtureDef.filter.maskBits = Constants.PLAYER_CATEGORY | Constants.ENEMY_CATEGORY | Constants.BULLET_CATEGORY | Constants.ENEMY_BULLET_CATEGORY;
 
         Fixture fixture = groundBody.createFixture(fixtureDef);
         fixture.setUserData("ground");

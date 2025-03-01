@@ -31,7 +31,7 @@ public class Constants {
     // Enemy constants
     public static final float ENEMY_SPEED = 2f;
     public static final int ENEMY_DAMAGE = 10;
-    public static final float ENEMY_SHOT_COOLDOWN = 1.5f; // Seconds
+    public static final float ENEMY_SHOT_COOLDOWN = 1f; // Seconds
     public static final float ENEMY_BULLET_SPEED = 7f;
     public static final float ENEMY_BULLET_ALIVE_TIME = 2f;
 
