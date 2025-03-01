@@ -35,7 +35,10 @@ public class AnimationManager {
         // Update animation state based on player conditions
 
         if(type == 0){
-            if (!isGrounded) {
+
+            if(isShot){
+                currentState = "dead";
+            } else if (!isGrounded) {
                 currentState = "jump";
             } else if (isMoving) {
                 currentState = "walk";

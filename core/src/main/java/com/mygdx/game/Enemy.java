@@ -192,7 +192,10 @@ public class Enemy {
         float y = body.getPosition().y - height / 2 + Constants.SPRITE_YOFFSET;
 
         TextureRegion currentEnemyFrame = animationManager.getCurrentPlayerFrame(enemyIsFacingLeft);
-        batch.draw(currentEnemyFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
+
+        if (currentState == State.DEAD) batch.draw(currentEnemyFrame, x, y - Constants.SPRITE_YOFFSET, 32 / Constants.PPM, 32 / Constants.PPM); // Need to offset the sprite
+        else batch.draw(currentEnemyFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
+
         if (currentState != State.DEAD) {
             TextureRegion currentGunFrame = animationManager.getCurrentGunFrame(enemyIsFacingLeft);
             batch.draw(currentGunFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
@@ -220,10 +223,12 @@ public class Enemy {
     private void detectPlayer() {
 
         float detectionRadius = 3f; // Meters
-        float distance = body.getPosition().dst(player.getBody().getPosition());
+        float distance = body.getPosition().x - player.getBody().getPosition().x;
 
-        if (distance <= detectionRadius && hasLineOfSight()) {
-            currentState = State.ATTACK;
+        if (abs(distance) <= detectionRadius && hasLineOfSight()) {
+            if((distance > 0 && enemyIsFacingLeft) || (distance < 0 && !enemyIsFacingLeft) || distance == 0) {
+                currentState = State.ATTACK;
+            }
         } else {
             currentState = State.PATROL;
         }

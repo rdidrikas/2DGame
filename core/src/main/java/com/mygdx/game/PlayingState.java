@@ -104,6 +104,14 @@ public class PlayingState extends GameState {
                     ((Enemy) userDataA).dead();
                 }
 
+                if (userDataA instanceof EnemyBullet && userDataB instanceof Player) {
+                    System.out.println("Bullet hit enemy");
+                    ((Player) userDataB).dead();
+                } else if (userDataA instanceof Player && userDataB instanceof EnemyBullet) {
+                    System.out.println("Bullet hit enemy");
+                    ((Player) userDataA).dead();
+                }
+
                 if (userDataA instanceof Bullet) {
                     ((Bullet) userDataA).markForRemoval(); // Removes sprite
                     removeBulletsQueue(fixtureA); // Removes body

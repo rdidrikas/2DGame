@@ -83,7 +83,7 @@ public class Player {
         fixtureDef.filter.maskBits = Constants.TILE_CATEGORY | Constants.ENEMY_BULLET_CATEGORY;
 
         Fixture playerFixture = body.createFixture(fixtureDef);
-        playerFixture.setUserData("player");
+        playerFixture.setUserData(this);
 
         shape.dispose();
 
@@ -108,6 +108,12 @@ public class Player {
             jumpFrames[temp] = tmpFrames[2][i];
         }
         animationManager.addAnimation("jump", new Animation<>(0.2f, jumpFrames));
+
+        // Player dead
+        TextureRegion[] deadFrames = { tmpFrames[7][11]};
+        deadFrames[0].flip(true, false); // Flip the frame
+        animationManager.addAnimation("dead", new Animation<>(0.1f, deadFrames));
+
     }
 
 
@@ -144,7 +150,8 @@ public class Player {
 
         TextureRegion currentPlayerFrame = animationManager.getCurrentPlayerFrame(isFacingLeft);
         batch.draw(currentPlayerFrame, x, y, width, height);
-        gun.render(batch, x, y); // draw gun
+
+        if (!isShot) gun.render(batch, x, y); // draw gun
     }
 
 
@@ -209,6 +216,11 @@ public class Player {
     public boolean isGrounded() {
         // Use velocity or other checks instead of collision flags
         return (Math.abs(body.getLinearVelocity().y) < 0.01f && Math.abs(body.getLinearVelocity().y) > -0.01f); // Near-zero vertical velocity
+    }
+
+    public void dead (){
+        this.isShot = true;
+
     }
 
 }
