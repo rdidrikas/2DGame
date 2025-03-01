@@ -8,7 +8,7 @@ public class Constants {
 
     // Player constants
     public static final float PLAYER_SPEED = 4;
-    public static final float SPRITE_YOFFSET = 0.10f;
+    public static final float SPRITE_YOFFSET = 0.15f;
     public static final float PLAYER_JUMP = 5f;
     public static final float PLAYER_SPEED_MID_AIR = 0.4f;
 

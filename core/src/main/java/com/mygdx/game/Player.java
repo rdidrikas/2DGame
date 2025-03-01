@@ -29,6 +29,7 @@ public class Player {
     public boolean isOnGround;
     public boolean isMoving;
     public boolean isFiring;
+    public boolean isShot;
 
     public boolean isFacingLeft = false;
 
@@ -44,6 +45,7 @@ public class Player {
         this.isOnGround = true;
         this.isMoving = false;
         this.isFiring = false;
+        this.isShot = false;
 
         animationManager = new AnimationManager();
         loadAnimations();
@@ -53,7 +55,7 @@ public class Player {
 
 
         float collisionBoxWidth = width / 3.5f;
-        float collisionBoxHeight = height / 1.5f;
+        float collisionBoxHeight = height / 1.8f;
 
         // Calculate offset to align collision box with sprite's feet
         float yOffset = (height - collisionBoxHeight) / 2;
@@ -78,7 +80,7 @@ public class Player {
         body.setLinearDamping(0f);
 
         fixtureDef.filter.categoryBits = Constants.PLAYER_CATEGORY;
-        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY | Constants.ENEMY_BULLET_CATEGORY | Constants.ENEMY_CATEGORY;
+        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY | Constants.ENEMY_BULLET_CATEGORY;
 
         Fixture playerFixture = body.createFixture(fixtureDef);
         playerFixture.setUserData("player");
@@ -117,7 +119,7 @@ public class Player {
             body.setLinearVelocity(0, body.getLinearVelocity().y); // PRevents sliding
         }
 
-        animationManager.update(delta, isGrounded(), isMoving, isFiring, 0); // player render animation
+        animationManager.update(delta, isGrounded(), isMoving, isFiring, isShot,0); // player render animation
         gun.update(delta, isGrounded(), isMoving, isFiring, isFacingLeft); // render gun animation
 
 

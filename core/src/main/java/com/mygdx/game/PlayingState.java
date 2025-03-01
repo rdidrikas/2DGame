@@ -77,6 +77,12 @@ public class PlayingState extends GameState {
 
         world.step(delta, 8, 3);
 
+        for (Body bullet : bulletsToRemove) {
+            world.destroyBody(bullet); // Destroy the body (and its fixtures)
+        }
+        bulletsToRemove.clear(); // Clear the queue
+
+
         /*************** Collisions ***************/
 
         world.setContactListener(new ContactListener() {
@@ -90,28 +96,34 @@ public class PlayingState extends GameState {
                 Object userDataA = fixtureA.getUserData();
                 Object userDataB = fixtureB.getUserData();
 
+                if (userDataA instanceof Bullet && userDataB instanceof Enemy) {
+                    System.out.println("Bullet hit enemy");
+                    ((Enemy) userDataB).dead();
+                } else if (userDataA instanceof Enemy && userDataB instanceof Bullet) {
+                    System.out.println("Bullet hit enemy");
+                    ((Enemy) userDataA).dead();
+                }
+
                 if (userDataA instanceof Bullet) {
-                    ((Bullet) userDataA).markForRemoval();
-                    System.out.println("Bullet A marked for removal");
+                    ((Bullet) userDataA).markForRemoval(); // Removes sprite
+                    removeBulletsQueue(fixtureA); // Removes body
+                    //System.out.println("Bullet A marked for removal");
                 }
                 if (userDataB instanceof Bullet) {
-                    ((Bullet) userDataB).markForRemoval();
-                    System.out.println("Bullet B marked for removal");
+                    ((Bullet) userDataB).markForRemoval(); // Removes sprite
+                    removeBulletsQueue(fixtureB); // Removes body
+                    //System.out.println("Bullet B marked for removal");
                 }
 
                 if (userDataA instanceof EnemyBullet) {
-                    ((EnemyBullet) userDataA).markForRemoval();
-                    System.out.println("Bullet A marked for removal");
+                    ((EnemyBullet) userDataA).markForRemoval(); // Removes sprite
+                    removeBulletsQueue(fixtureA); // Removes body
+                    //System.out.println("Bullet A marked for removal");
                 }
                 if (userDataB instanceof EnemyBullet) {
-                    ((EnemyBullet) userDataB).markForRemoval();
-                    System.out.println("Bullet B marked for removal");
-                }
-
-                if(userDataA == "bullet" && userDataB == "enemy"){
-                    System.out.println("Bullet hit enemy");
-                } else if (userDataA == "enemy" && userDataB == "bullet"){
-                    System.out.println("Bullet hit enemy");
+                    ((EnemyBullet) userDataB).markForRemoval(); // Removes sprite
+                    removeBulletsQueue(fixtureB); // Removes body
+                    //System.out.println("Bullet B marked for removal");
                 }
 
 
@@ -191,7 +203,7 @@ public class PlayingState extends GameState {
 
         /*********** DEBUGGER **********/
 
-        debugRenderer.render(world, camera.combined);
+        // debugRenderer.render(world, camera.combined);
     }
 
 
@@ -307,6 +319,11 @@ public class PlayingState extends GameState {
         fixture.setUserData("ground");
 
         chain.dispose();
+    }
+
+    public void removeBulletsQueue(Fixture fixture) {
+        Body bulletBody = fixture.getBody();
+        bulletsToRemove.add(bulletBody);
     }
 
     @Override

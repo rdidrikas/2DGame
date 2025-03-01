@@ -18,6 +18,7 @@ public class Gun {
 
     private AnimationManager animationManager;
     private boolean isFiring;
+    private boolean isShot;
     private boolean isFacingLeft;
 
     private float shotTimer = 0f;
@@ -65,7 +66,7 @@ public class Gun {
             shotTimer -= delta;
         }
 
-        animationManager.update(delta, isGrounded, isMoving, isFiring, 1);
+        animationManager.update(delta, isGrounded, isMoving, isFiring, isShot,1);
 
         Iterator<Bullet> iterator = bullets.iterator();
         while (iterator.hasNext()) {
@@ -73,7 +74,7 @@ public class Gun {
             // bullet.update(delta, isFacingLeft);
             if (bullet.isMarkedForRemoval()) {
                 iterator.remove();
-                System.out.println("Bullet removed here");
+                // System.out.println("Bullet removed here");
             }
         }
 

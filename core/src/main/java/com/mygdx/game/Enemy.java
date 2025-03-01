@@ -21,47 +21,54 @@ public class Enemy {
     private World world;
 
     private int health = 10;
-    private boolean isMoving = false;
+    public boolean isMoving;
     private float width, height;
 
-    private enum State { PATROL, ATTACK }
+    private enum State { PATROL, ATTACK, DEAD }
     private State currentState = State.PATROL;
     private Vector2 patrolTarget;
     private float shootTimer = 0;
-    private boolean isFiring = false;
+    public boolean isFiring;
+    public boolean isShot;
+    public boolean alreadyRendered;
     private float patrolCooldown = 0;
 
     private AnimationManager animationManager;
     private boolean enemyIsFacingLeft;
 
     public LinkedList<EnemyBullet> bullets = new LinkedList<EnemyBullet>();
-    private Texture enemyBulletSheet = new Texture("Animations/Bullet Friendly.png");
 
     public Enemy(World world, float x, float y, Player player) {
 
         this.player = player;
         this.world = world;
+        this.isMoving = false;
+        this.isShot = false;
+        this.isFiring = false;
+        this.alreadyRendered = false;
 
         enemyIsFacingLeft = false;
-        isMoving = false;
         width = 32 / Constants.PPM;
         height = 32 / Constants.PPM;
 
         animationManager = new AnimationManager();
 
+        // Define the enemy collision shape
+        float collisionBoxWidth = width / 3.5f;
+        float collisionBoxHeight = height / 1.8f;
+
+        // Calculate offset to align collision box with sprite's feet
+        float yOffset = (height - collisionBoxHeight) / 2;
+
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
-        bodyDef.position.set(x, y);
+        bodyDef.position.set(x, y - yOffset);
         bodyDef.fixedRotation = true;
         body = world.createBody(bodyDef);
 
-        // Define the enemy collision shape
-        float collisionBoxWidth = width / 3.5f;
-        float collisionBoxHeight = height / 1.5f;
-
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(collisionBoxWidth / 2,
-            collisionBoxHeight / 2);
+            collisionBoxHeight / 2 );
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
@@ -70,10 +77,11 @@ public class Enemy {
         fixtureDef.restitution = 0f;
 
         fixtureDef.filter.categoryBits = Constants.ENEMY_CATEGORY;
-        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY | Constants.BULLET_CATEGORY | Constants.PLAYER_CATEGORY;
+        fixtureDef.filter.maskBits = Constants.TILE_CATEGORY | Constants.BULLET_CATEGORY;
 
         Fixture enemyNormal = body.createFixture(fixtureDef);
-        enemyNormal.setUserData("enemyNormal");
+        // enemyNormal.setUserData("enemyNormal");
+        enemyNormal.setUserData(this);
 
         body.setGravityScale(1f);
         body.setLinearDamping(0f);
@@ -131,6 +139,20 @@ public class Enemy {
         TextureRegion[] walkFrames = { tmpFrames[0][1], tmpFrames[0][2], tmpFrames[0][3] };
         animationManager.addAnimation("enemyNormalWalk", new Animation<>(0.3f, walkFrames));
 
+        // Enemy shot animation
+        TextureRegion[] enemyShotFrames = new TextureRegion[15];
+        for (int i = 16, temp = 0; i < 31; i++, temp++) {
+            enemyShotFrames[temp] = tmpFrames[11][i];
+        }
+
+        Animation<TextureRegion> shotAnimation = new Animation<>(0.3f, enemyShotFrames);
+        shotAnimation.setPlayMode(Animation.PlayMode.NORMAL); // play once
+        animationManager.addAnimation("enemyNormalShot", shotAnimation);
+
+
+        // Enemy dead
+        TextureRegion[] enemyDeadFrames = {tmpFrames[11][30]};
+        animationManager.addAnimation("enemyNormalDead", new Animation<>(0.1f, enemyDeadFrames));
 
     }
 
@@ -140,19 +162,25 @@ public class Enemy {
             bullet.update(delta);
         }
 
+        if(currentState != State.DEAD) {
+            if (isMoving && currentState == State.PATROL && body.getLinearVelocity().x == 0) {
+                setRandomPatrolTarget();
+            }
 
-        detectPlayer();
-        handleState(delta);
+            detectPlayer();
+            handleState(delta);
+            animationManager.update(delta, isGroundedEnemy(), isMoving, isFiring, isShot, 3);
+        }
 
-        animationManager.update(delta, isGroundedEnemy(), isMoving, isFiring, 2);
-        animationManager.update(delta, isGroundedEnemy(), isMoving, isFiring, 3);
+        animationManager.update(delta, isGroundedEnemy(), isMoving, isFiring, isShot,2);
+
 
         Iterator<EnemyBullet> iterator = bullets.iterator();
         while (iterator.hasNext()) {
             EnemyBullet bullet = iterator.next();
             if (bullet.isMarkedForRemoval()) {
                 iterator.remove();
-                System.out.println("Bullet removed here");
+                // System.out.println("Bullet removed here");
             }
         }
 
@@ -160,24 +188,24 @@ public class Enemy {
 
     public void render(SpriteBatch batch) {
 
-
         float x = body.getPosition().x - width / 2;
-        float y = body.getPosition().y - height / 2;
+        float y = body.getPosition().y - height / 2 + Constants.SPRITE_YOFFSET;
 
         TextureRegion currentEnemyFrame = animationManager.getCurrentPlayerFrame(enemyIsFacingLeft);
-        TextureRegion currentGunFrame = animationManager.getCurrentGunFrame(enemyIsFacingLeft);
-
         batch.draw(currentEnemyFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
-        batch.draw(currentGunFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
+        if (currentState != State.DEAD) {
+            TextureRegion currentGunFrame = animationManager.getCurrentGunFrame(enemyIsFacingLeft);
+            batch.draw(currentGunFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
+        } else alreadyRendered = true;
 
         for (EnemyBullet bullet : bullets) {
             bullet.render(batch, animationManager.getBulletFrame("enemyBullet"), enemyIsFacingLeft);
         }
     }
+
     private void destroy() {
         // Remove the enemy from the world
     }
-
 
     public boolean isGroundedEnemy() {
         // Use velocity or other checks instead of collision flags
@@ -213,7 +241,7 @@ public class Enemy {
     }
 
     private void setRandomPatrolTarget() {
-        patrolCooldown = 5f;
+        patrolCooldown = 10f;
         patrolTarget = new Vector2(
             body.getPosition().x + MathUtils.random(-3, 3),
             body.getPosition().y
@@ -224,19 +252,20 @@ public class Enemy {
         // Basic patrol logic
 
         patrolCooldown -= delta;
-
         isFiring = false;
-
-        Vector2 direction = new Vector2(patrolTarget).sub(body.getPosition()).nor();
-        body.setLinearVelocity(Constants.ENEMY_SPEED * direction.x, body.getLinearVelocity().y);
-        isMoving = true;
 
         if (body.getPosition().dst(patrolTarget) < 0.2f) {
             isMoving = false;
             if(patrolCooldown <= 0){
                 setRandomPatrolTarget();
             }
+        } else {
+            Vector2 direction = new Vector2(patrolTarget).sub(body.getPosition()).nor();
+            body.setLinearVelocity(Constants.ENEMY_SPEED * direction.x, body.getLinearVelocity().y);
+            enemyIsFacingLeft = direction.x < 0;
+            isMoving = true;
         }
+
     }
 
     private void attack(float delta) {
@@ -249,7 +278,7 @@ public class Enemy {
         if (shootTimer <= 0) {
             shoot();
             shootTimer = Constants.ENEMY_SHOT_COOLDOWN;
-            System.out.println("Enemy shot");
+            // System.out.println("Enemy shot");
         }
     }
 
@@ -265,6 +294,14 @@ public class Enemy {
         Vector2 spawnPos = body.getPosition().cpy().add(offsetX, 0);
 
         bullets.add(new EnemyBullet(world, spawnPos.x, spawnPos.y, enemyIsFacingLeft, playerIsLeft));
+    }
+
+    public void dead(){
+        if(!isShot) {
+            currentState = State.DEAD;
+            isShot = true;
+            animationManager.stateTime = 0;
+        }
     }
 
 }

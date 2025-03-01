@@ -12,11 +12,12 @@ public class AnimationManager {
     private final Map<String, Animation<TextureRegion>> animations;
     private String currentState;
     private String currentGunState;
-    private float stateTime;
+    public float stateTime;
+    public boolean animIsShot;
 
     public AnimationManager() {
         animations = new HashMap<>();
-        stateTime = 0;
+        this.stateTime = 0;
         currentState = "idle";
     }
 
@@ -24,9 +25,9 @@ public class AnimationManager {
         animations.put(name, animation);
     }
 
-    public void update(float delta, boolean isGrounded, boolean isMoving, boolean isFiring, int type) {
+    public void update(float delta, boolean isGrounded, boolean isMoving, boolean isFiring, boolean isShot, int type) {
         stateTime += delta;
-
+        animIsShot = isShot; // Used to play animation only one time
         // type == 0 -> player
         // type == 1 -> gun
         // type == 2 -> enemy
@@ -50,7 +51,12 @@ public class AnimationManager {
                 currentGunState = "gunIdle";
             }
         } else if(type == 2){
-            if (isMoving) {
+            if (isShot) {
+                if (animations.get("enemyNormalShot").isAnimationFinished(stateTime)) {
+                    currentState = "enemyNormalDead";
+                }
+                else currentState = "enemyNormalShot";
+            } else if(isMoving) {
                 currentState = "enemyNormalWalk";
             } else {
                 currentState = "enemyNormalIdle";
@@ -68,6 +74,7 @@ public class AnimationManager {
     }
 
     public TextureRegion getCurrentPlayerFrame(boolean isFacingLeft) {
+
         TextureRegion frame = animations.get(currentState).getKeyFrame(stateTime, true);
         TextureRegion flippedFrame = new TextureRegion(frame);
         if (isFacingLeft) {
