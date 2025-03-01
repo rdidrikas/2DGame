@@ -20,6 +20,7 @@ import com.badlogic.gdx.utils.Array;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class PlayingState extends GameState {
 
@@ -35,6 +36,9 @@ public class PlayingState extends GameState {
 
     // Removing bullets inside world.step() causes a crash
     private Array<Body> bulletsToRemove = new Array<>();
+
+    private Array<Body> bodiesToRemove = new Array<>();
+
 
 
     public PlayingState(GameStateManager gsm) {
@@ -75,12 +79,45 @@ public class PlayingState extends GameState {
     @Override
     public void update(float delta) {
 
-        world.step(delta, 8, 3);
-
         for (Body bullet : bulletsToRemove) {
             world.destroyBody(bullet); // Destroy the body (and its fixtures)
         }
         bulletsToRemove.clear(); // Clear the queue
+
+        for(Body body : bodiesToRemove) {
+            if(!world.isLocked() && body.getWorld() != null) {
+                world.destroyBody(body);
+            }
+        }
+        bodiesToRemove.clear();
+
+        if(player.isShot) {
+            Gdx.app.postRunnable(() -> {
+
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                // Destroy old world
+                world.dispose();
+
+                // Create new world
+                world = new World(new Vector2(0, Constants.GRAVITY), true);
+
+                // Reinitialize game state
+                player = new Player(world, 100/Constants.PPM, 300/Constants.PPM, 32/Constants.PPM, 32/Constants.PPM);
+                spawner = new EnemySpawner(world, player);
+                createCollisionTiles();
+
+                // Transition state
+                gsm.setState(new GameOverState(gsm, this));
+            });
+        }
+
+        world.step(delta, 8, 3);
+
+
 
 
         /*************** Collisions ***************/
@@ -333,6 +370,34 @@ public class PlayingState extends GameState {
         Body bulletBody = fixture.getBody();
         bulletsToRemove.add(bulletBody);
     }
+
+    public void reset() {
+        player.reset();
+        // Reset other game elements as needed
+        spawner.reset();
+        bulletsToRemove.clear();
+    }
+
+    public void resetWorld() {
+        // 1. Destroy old world
+        if(world != null) {
+            world.dispose();
+        }
+
+        // 2. Create new world
+        world = new World(new Vector2(0, Constants.GRAVITY), true);
+
+        // 3. Reinitialize everything
+        player = new Player(world, 100/Constants.PPM, 300/Constants.PPM, 32/Constants.PPM, 32/Constants.PPM);
+        spawner = new EnemySpawner(world, player);
+
+        // 4. Recreate collision tiles
+        createCollisionTiles();
+
+        // 5. Reset other state
+        bulletsToRemove.clear();
+    }
+
 
     @Override
     public void dispose() {

@@ -204,9 +204,12 @@ public class Player {
     }
 
     public void reset() {
-        body.setTransform(100 / Constants.PPM, 300 / Constants.PPM, 0); // Reset position
-        body.setLinearVelocity(0, 0); // Reset velocity
+        body.setTransform(100 / Constants.PPM, 300 / Constants.PPM, 0);
+        body.setLinearVelocity(0, 0);
+        isShot = false;
         isOnGround = false;
+        canJump = false;
+        coyoteTimer = 0;
     }
 
     public Body getBody() {
@@ -220,7 +223,6 @@ public class Player {
 
     public void dead (){
         this.isShot = true;
-
     }
 
 }

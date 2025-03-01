@@ -20,6 +20,8 @@ public class Enemy {
     private Player player;
     private World world;
 
+    private Vector2 initialPosition;
+
     private int health = 10;
     public boolean isMoving;
     private float width, height;
@@ -39,6 +41,8 @@ public class Enemy {
     public LinkedList<EnemyBullet> bullets = new LinkedList<EnemyBullet>();
 
     public Enemy(World world, float x, float y, Player player) {
+
+        this.initialPosition = new Vector2(x, y);
 
         this.player = player;
         this.world = world;
@@ -295,7 +299,7 @@ public class Enemy {
         boolean playerIsLeft = playerPos.x < body.getPosition().x;
 
         // Create projectile (similar to player bullets)
-        float offsetX = enemyIsFacingLeft ? -0.3f : 0.3f;
+        float offsetX = enemyIsFacingLeft ? -0.05f : 0.05f;
         Vector2 spawnPos = body.getPosition().cpy().add(offsetX, 0);
 
         bullets.add(new EnemyBullet(world, spawnPos.x, spawnPos.y, enemyIsFacingLeft, playerIsLeft));
@@ -306,7 +310,22 @@ public class Enemy {
             currentState = State.DEAD;
             isShot = true;
             animationManager.stateTime = 0;
+
         }
+    }
+
+    public void cleanup() {
+        // Only need to destroy body, no state reset needed
+        if(body != null) {
+            world.destroyBody(body);
+            body = null;
+        }
+
+        // Cleanup bullets
+        for(EnemyBullet bullet : bullets) {
+            bullet.markForRemoval();
+        }
+        bullets.clear();
     }
 
 }

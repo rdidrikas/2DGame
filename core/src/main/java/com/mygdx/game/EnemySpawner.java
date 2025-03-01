@@ -45,4 +45,23 @@ public class EnemySpawner {
             enemy.render(batch);
         }
     }
+
+    public void reset() {
+        // First clean up existing enemies
+        for(Enemy enemy : enemies) {
+            enemy.cleanup(); // New method we'll add to Enemy
+        }
+        enemies.clear();
+
+        // Re-spawn fresh enemies
+        spawnEnemy();
+    }
+    private void cleanupWorldBodies() {
+        // Optional: Clean up any remaining bullets
+        for(Enemy enemy : enemies) {
+            for(EnemyBullet bullet : enemy.bullets) {
+                bullet.markForRemoval();
+            }
+        }
+    }
 }
