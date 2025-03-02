@@ -34,6 +34,8 @@ public class Enemy {
     public boolean isShot;
     public boolean alreadyRendered;
     private float patrolCooldown = 0;
+    public float deathTimer;
+    private float reactionTime = Constants.ENEMY_DETECTION_REACTION;
 
     private AnimationManager animationManager;
     private boolean enemyIsFacingLeft;
@@ -50,6 +52,7 @@ public class Enemy {
         this.isShot = false;
         this.isFiring = false;
         this.alreadyRendered = false;
+        this.deathTimer = Constants.ENEMY_DEATH_TIMER;
 
         enemyIsFacingLeft = false;
         width = 32 / Constants.PPM;
@@ -171,7 +174,7 @@ public class Enemy {
                 setRandomPatrolTarget();
             }
 
-            detectPlayer();
+            detectPlayer(delta);
             handleState(delta);
             animationManager.update(delta, isGroundedEnemy(), isMoving, isFiring, isShot, 3);
         }
@@ -188,9 +191,20 @@ public class Enemy {
             }
         }
 
+        if(isShot){
+            deathTimer -= delta;
+            if(deathTimer <= 0){
+                alreadyRendered = true;
+            }
+        }
+
     }
 
     public void render(SpriteBatch batch) {
+
+        if (currentState == State.DEAD && alreadyRendered) {
+            return;
+        }
 
         float x = body.getPosition().x - width / 2;
         float y = body.getPosition().y - height / 2 + Constants.SPRITE_YOFFSET;
@@ -203,7 +217,7 @@ public class Enemy {
         if (currentState != State.DEAD) {
             TextureRegion currentGunFrame = animationManager.getCurrentGunFrame(enemyIsFacingLeft);
             batch.draw(currentGunFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
-        } else alreadyRendered = true;
+        }
 
         for (EnemyBullet bullet : bullets) {
             bullet.render(batch, animationManager.getBulletFrame("enemyBullet"), enemyIsFacingLeft);
@@ -224,17 +238,24 @@ public class Enemy {
         return abs(xDiff) < 0.2;
     }
 
-    private void detectPlayer() {
+    private void detectPlayer(float delta) {
 
         float detectionRadius = 3f; // Meters
         float distance = body.getPosition().x - player.getBody().getPosition().x;
 
         if (abs(distance) <= detectionRadius && hasLineOfSight()) {
             if((distance > 0 && enemyIsFacingLeft) || (distance < 0 && !enemyIsFacingLeft) || distance == 0) {
-                currentState = State.ATTACK;
+                reactionTime -= delta;
+                if (reactionTime <= 0) {
+                    currentState = State.ATTACK;
+                }
             }
         } else {
-            currentState = State.PATROL;
+            if(currentState != State.ATTACK){
+                currentState = State.PATROL;
+            } else {
+                reactionTime = Constants.ENEMY_DETECTION_REACTION;
+            }
         }
     }
 
@@ -310,7 +331,6 @@ public class Enemy {
             currentState = State.DEAD;
             isShot = true;
             animationManager.stateTime = 0;
-
         }
     }
 

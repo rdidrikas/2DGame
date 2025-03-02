@@ -11,6 +11,7 @@ public class Constants {
     public static final float SPRITE_YOFFSET = 0.15f;
     public static final float PLAYER_JUMP = 5f;
     public static final float PLAYER_SPEED_MID_AIR = 0.4f;
+    public static final float PLAYER_DEATH_DURATION = 3f;
 
     // Box2D collision categories
     public static final short PLAYER_CATEGORY = 0x0001;
@@ -24,16 +25,18 @@ public class Constants {
     public static final float RAMBO_BULLET_SPEED = 7f;
     public static final int RAMBO_BULLET_DAMAGE = 10;
     public static final float RAMBO_SHOT_COOLDOWN = 0.5f; // Seconds
-    public static final float RAMBO_BULLET_DISTANCE = 200f;
+    public static final float RAMBO_BULLET_DISTANCE = 8f;
     public static final float RAMBO_BULLET_XOFFSET = 0.3f;
     public static final float RAMBO_BULLET_YOFFSET = 0.1f;
 
     // Enemy constants
     public static final float ENEMY_SPEED = 2f;
     public static final int ENEMY_DAMAGE = 10;
-    public static final float ENEMY_SHOT_COOLDOWN = 1f; // Seconds
+    public static final float ENEMY_SHOT_COOLDOWN = 2f; // Seconds
     public static final float ENEMY_BULLET_SPEED = 7f;
     public static final float ENEMY_BULLET_ALIVE_TIME = 2f;
+    public static final float ENEMY_DEATH_TIMER = 3f;
+    public static final float ENEMY_DETECTION_REACTION = 1f;
 
 
 }

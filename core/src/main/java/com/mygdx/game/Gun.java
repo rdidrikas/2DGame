@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 
@@ -23,7 +24,10 @@ public class Gun {
 
     private float shotTimer = 0f;
 
-    public Gun() {
+    private Array<Body> bulletsToRemove;
+
+    public Gun(Array<Body> bulletsToRemove) {
+        this.bulletsToRemove = bulletsToRemove;
         animationManager = new AnimationManager();
         loadGunAnimations();
     }
@@ -71,10 +75,10 @@ public class Gun {
         Iterator<Bullet> iterator = bullets.iterator();
         while (iterator.hasNext()) {
             Bullet bullet = iterator.next();
-            // bullet.update(delta, isFacingLeft);
+            bullet.update(delta, isFacingLeft);
             if (bullet.isMarkedForRemoval()) {
                 iterator.remove();
-                // System.out.println("Bullet removed here");
+                bulletsToRemove.add(bullet.getBody());
             }
         }
 
@@ -97,7 +101,5 @@ public class Gun {
 
     }
 
-    public void stopFiring() {
-        isFiring = false;
-    }
+
 }

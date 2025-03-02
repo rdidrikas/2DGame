@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Array;
 import org.lwjgl.Sys;
 
 public class Player {
@@ -30,11 +31,13 @@ public class Player {
     public boolean isMoving;
     public boolean isFiring;
     public boolean isShot;
-
     public boolean isFacingLeft = false;
 
+    public float deathTimer = Constants.PLAYER_DEATH_DURATION;
+    private Array<Body> bulletsToRemove;
 
-    public Player(World world, float x, float y, float width, float height) {
+
+    public Player(World world, float x, float y, float width, float height, Array<Body> bulletsToRemove) {
 
         this.width = width;
         this.height = height;
@@ -50,9 +53,7 @@ public class Player {
         animationManager = new AnimationManager();
         loadAnimations();
 
-        gun = new Gun();
-
-
+        gun = new Gun(bulletsToRemove);
 
         float collisionBoxWidth = width / 3.5f;
         float collisionBoxHeight = height / 1.8f;
@@ -119,10 +120,18 @@ public class Player {
 
     public void update(float delta) {
 
+        if (isShot) {
+            deathTimer -= delta;
+            if (deathTimer <= 0) {
+                isShot = false; // Unlock player
+                reset(); // Reset player position
+            }
+        }
+
         stateTime += delta;
 
         if(!isMoving){
-            body.setLinearVelocity(0, body.getLinearVelocity().y); // PRevents sliding
+            body.setLinearVelocity(0, body.getLinearVelocity().y); // Prevents sliding
         }
 
         animationManager.update(delta, isGrounded(), isMoving, isFiring, isShot,0); // player render animation
@@ -152,6 +161,7 @@ public class Player {
         batch.draw(currentPlayerFrame, x, y, width, height);
 
         if (!isShot) gun.render(batch, x, y); // draw gun
+
     }
 
 
@@ -205,9 +215,9 @@ public class Player {
 
     public void reset() {
         body.setTransform(100 / Constants.PPM, 300 / Constants.PPM, 0);
-        body.setLinearVelocity(0, 0);
+        // body.setLinearVelocity(0, 0);
         isShot = false;
-        isOnGround = false;
+        isOnGround = isGrounded();
         canJump = false;
         coyoteTimer = 0;
     }

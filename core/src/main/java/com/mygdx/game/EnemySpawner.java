@@ -6,6 +6,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 
+import java.util.Iterator;
+
 public class EnemySpawner {
     private Array<Enemy> enemies = new Array<>();
     private Array<Vector2> spawnPoints = new Array<>();
@@ -37,6 +39,15 @@ public class EnemySpawner {
     public void update(float delta, Vector2 playerPosition) {
         for (Enemy enemy : enemies) {
             enemy.update(delta, playerPosition);
+        }
+        Iterator<Enemy> iterator = enemies.iterator();
+        while(iterator.hasNext()){
+            Enemy enemy = iterator.next();
+            enemy.update(delta, playerPosition);
+            // Check if the enemy is dead and its death animation is finished (or if you no longer need to render it)
+            if(enemy.isShot && enemy.alreadyRendered) {
+                iterator.remove();
+            }
         }
     }
 

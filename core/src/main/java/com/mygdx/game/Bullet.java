@@ -11,7 +11,7 @@ public class Bullet {
 
     private Body body; // Box2D body for physics
     private boolean active = true; // Track if the bullet is active
-    private Vector2 startPosition;
+    private float startPosition;
 
     private boolean markedForRemoval = false;
 
@@ -56,11 +56,8 @@ public class Bullet {
 
         shape.dispose();
 
-        // Set the bullet's velocity based on the angle
-
-
         // Store the starting position
-        startPosition = new Vector2(x, y);
+        startPosition = x;
 
     }
 
@@ -68,10 +65,11 @@ public class Bullet {
 
         // Deactivate the bullet if it goes too far
         if (active) {
-            Vector2 currentPosition = body.getPosition();
-            float distanceTraveled = startPosition.dst(currentPosition);
+            float currentPosition = body.getPosition().x;
+            float distanceTraveled = currentPosition - startPosition;
             if (abs(distanceTraveled) > Constants.RAMBO_BULLET_DISTANCE) {
-                this.active = false;
+                active = false;
+                markedForRemoval = true;
             }
 
         }
@@ -79,6 +77,7 @@ public class Bullet {
     }
 
     public void render(SpriteBatch batch, TextureRegion bulletTexture, boolean isFacingLeft) {
+
         if (active) {
             float newHeight = bulletTexture.getRegionHeight() / Constants.PPM;
             float newWidth = bulletTexture.getRegionWidth() / Constants.PPM;

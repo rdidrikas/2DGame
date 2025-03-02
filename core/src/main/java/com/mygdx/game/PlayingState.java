@@ -35,9 +35,9 @@ public class PlayingState extends GameState {
     private boolean wasSpacePressed = false;
 
     // Removing bullets inside world.step() causes a crash
-    private Array<Body> bulletsToRemove = new Array<>();
+    public Array<Body> bulletsToRemove = new Array<>();
 
-    private Array<Body> bodiesToRemove = new Array<>();
+    public Array<Body> bodiesToRemove = new Array<>();
 
 
 
@@ -61,10 +61,13 @@ public class PlayingState extends GameState {
             100 / Constants.PPM,  // X position (meters)
             300 / Constants.PPM,  // Y position (meters)
             32 / Constants.PPM,   // Width (meters)
-            32 / Constants.PPM    // Height (meters)
+            32 / Constants.PPM,    // Height (meters)
+            bulletsToRemove
         );
 
         spawner = new EnemySpawner(world, player);
+
+
 
         // Set camera viewport to METERS
         camera = new OrthographicCamera();
@@ -85,12 +88,11 @@ public class PlayingState extends GameState {
         bulletsToRemove.clear(); // Clear the queue
 
         for(Body body : bodiesToRemove) {
-            if(!world.isLocked() && body.getWorld() != null) {
-                world.destroyBody(body);
-            }
+            world.destroyBody(body);
         }
         bodiesToRemove.clear();
 
+        /*
         if(player.isShot) {
             Gdx.app.postRunnable(() -> {
 
@@ -114,11 +116,8 @@ public class PlayingState extends GameState {
                 gsm.setState(new GameOverState(gsm, this));
             });
         }
-
+           */
         world.step(delta, 8, 3);
-
-
-
 
         /*************** Collisions ***************/
 
@@ -136,9 +135,11 @@ public class PlayingState extends GameState {
                 if (userDataA instanceof Bullet && userDataB instanceof Enemy) {
                     System.out.println("Bullet hit enemy");
                     ((Enemy) userDataB).dead();
+                    removeBodiesQueue(fixtureB);
                 } else if (userDataA instanceof Enemy && userDataB instanceof Bullet) {
                     System.out.println("Bullet hit enemy");
                     ((Enemy) userDataA).dead();
+                    removeBodiesQueue(fixtureA);
                 }
 
                 if (userDataA instanceof EnemyBullet && userDataB instanceof Player) {
@@ -248,7 +249,7 @@ public class PlayingState extends GameState {
 
         /*********** DEBUGGER **********/
 
-        // debugRenderer.render(world, camera.combined);
+        debugRenderer.render(world, camera.combined);
     }
 
 
@@ -256,36 +257,39 @@ public class PlayingState extends GameState {
         player.isMoving = false;
         boolean isSpacePressed = Gdx.input.isKeyPressed(Input.Keys.SPACE);
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            player.jump();
-        }
-        if (wasSpacePressed && !isSpacePressed) {
-            // Key was released this frame
-            player.handleJumpRelease();
+        if(!player.isShot){
+            if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+                player.jump();
+            }
+            if (wasSpacePressed && !isSpacePressed) {
+                // Key was released this frame
+                player.handleJumpRelease();
+            }
+
+            // Update previous state for next frame
+            wasSpacePressed = isSpacePressed;
+
+            if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+                player.moveLeft();
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+                player.moveRight();
+            }
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
+                player.reset();
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.J)){
+                player.fire();
+            }
+            if (Gdx.input.isKeyJustPressed(Input.Keys.K)){
+                spawner.spawnEnemy();
+            }
+            if (Gdx.input.isKeyJustPressed(Input.Keys.L)){
+                System.out.println("Player X: " + player.getBody().getPosition().x);
+                System.out.println("Player Y: " + player.getBody().getPosition().y);
+            }
         }
 
-        // Update previous state for next frame
-        wasSpacePressed = isSpacePressed;
-
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            player.moveLeft();
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            player.moveRight();
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
-            player.reset();
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.J)){
-            player.fire();
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.K)){
-            spawner.spawnEnemy();
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.L)){
-            System.out.println("Player X: " + player.getBody().getPosition().x);
-            System.out.println("Player Y: " + player.getBody().getPosition().y);
-        }
 
     }
 
@@ -333,7 +337,7 @@ public class PlayingState extends GameState {
         List<Vector2> cleaned = new ArrayList<>();
         Vector2 last = null;
         for (Vector2 v : vertices) {
-            if (last == null || !v.equals(last)) {
+            if (!v.equals(last)) {
                 cleaned.add(v);
                 last = v;
             }
@@ -371,6 +375,11 @@ public class PlayingState extends GameState {
         bulletsToRemove.add(bulletBody);
     }
 
+    public void removeBodiesQueue(Fixture fixture) {
+        Body body = fixture.getBody();
+        bodiesToRemove.add(body);
+    }
+
     public void reset() {
         player.reset();
         // Reset other game elements as needed
@@ -388,7 +397,7 @@ public class PlayingState extends GameState {
         world = new World(new Vector2(0, Constants.GRAVITY), true);
 
         // 3. Reinitialize everything
-        player = new Player(world, 100/Constants.PPM, 300/Constants.PPM, 32/Constants.PPM, 32/Constants.PPM);
+        player = new Player(world, 100/Constants.PPM, 300/Constants.PPM, 32/Constants.PPM, 32/Constants.PPM, bulletsToRemove);
         spawner = new EnemySpawner(world, player);
 
         // 4. Recreate collision tiles
