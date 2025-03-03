@@ -32,6 +32,7 @@ public class Player {
     public boolean isFiring;
     public boolean isShot;
     public boolean isFacingLeft = false;
+    public boolean levelCompleted;
 
     public float deathTimer = Constants.PLAYER_DEATH_DURATION;
     private Array<Body> bulletsToRemove;
@@ -49,6 +50,7 @@ public class Player {
         this.isMoving = false;
         this.isFiring = false;
         this.isShot = false;
+        this.levelCompleted = false;
 
         animationManager = new AnimationManager();
         loadAnimations();

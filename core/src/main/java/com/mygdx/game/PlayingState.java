@@ -22,8 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.Math.abs;
+
 public class PlayingState extends GameState {
 
+    private LevelManager levelManager;
     private World world;
     private Box2DDebugRenderer debugRenderer;
     private Player player;
@@ -44,30 +47,43 @@ public class PlayingState extends GameState {
     public PlayingState(GameStateManager gsm) {
         super(gsm);
 
+        levelManager = new LevelManager();
+        initializeLevel();
+
+    }
+
+
+    /********* LEVEL MANAGEMENT *********/
+
+
+    private void initializeLevel() {
+        // Clear existing world
+        if(world != null) world.dispose();
+
+        // Create new world
         world = new World(new Vector2(0, Constants.GRAVITY), true);
         debugRenderer = new Box2DDebugRenderer();
 
-        map = new TmxMapLoader().load("Map/map.tmx");
+        // Load level-specific map
+        Level currentLevel = levelManager.getCurrentLevel();
+        map = new TmxMapLoader().load(currentLevel.mapFile);
         renderer = new OrthogonalTiledMapRenderer(map, 1 / Constants.PPM);
-        // *** PPM CHANGE: Scale map renderer to meters
 
-
-
-        createCollisionTiles();
-
-        // Initialize player with METER-based position/size
-        player = new Player(
-            world,
-            100 / Constants.PPM,  // X position (meters)
-            300 / Constants.PPM,  // Y position (meters)
-            32 / Constants.PPM,   // Width (meters)
-            32 / Constants.PPM,    // Height (meters)
+        // Initialize player at level's start position
+        player = new Player(world,
+            currentLevel.playerStartPosition.x,
+            currentLevel.playerStartPosition.y,
+            32/Constants.PPM,
+            32/Constants.PPM,
             bulletsToRemove
         );
 
+        // Initialize enemies
         spawner = new EnemySpawner(world, player);
+        spawner.spawnPoints.clear();
+        spawner.setSpawnPoints(currentLevel.enemySpawnPoints);
 
-
+        createCollisionTiles();
 
         // Set camera viewport to METERS
         camera = new OrthographicCamera();
@@ -78,6 +94,29 @@ public class PlayingState extends GameState {
         );
         camera.zoom = 0.3f; // *** PPM CHANGE: Zoom out camera
     }
+
+    public void nextLevel() {
+        levelManager.nextLevel();
+        initializeLevel();
+    }
+
+    private void checkLevelCompletion() {
+
+        float xEnd = abs(player.getBody().getPosition().x - levelManager.getCurrentLevel().levelCompletionPosition.x);
+        float yEnd = abs(player.getBody().getPosition().y - levelManager.getCurrentLevel().levelCompletionPosition.y);
+
+        if(xEnd < 0.2 && yEnd < 0.2) { // *** PPM CHANGE: Replace with level completion check
+            if(levelManager.isFinalLevel()) {
+                System.exit(1);
+            } else {
+                nextLevel();
+            }
+        }
+    }
+
+
+    /********* GAME LOOP *********/
+
 
     @Override
     public void update(float delta) {
@@ -92,31 +131,9 @@ public class PlayingState extends GameState {
         }
         bodiesToRemove.clear();
 
-        /*
-        if(player.isShot) {
-            Gdx.app.postRunnable(() -> {
+        checkLevelCompletion();
 
-                try {
-                    TimeUnit.SECONDS.sleep(1);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                // Destroy old world
-                world.dispose();
 
-                // Create new world
-                world = new World(new Vector2(0, Constants.GRAVITY), true);
-
-                // Reinitialize game state
-                player = new Player(world, 100/Constants.PPM, 300/Constants.PPM, 32/Constants.PPM, 32/Constants.PPM);
-                spawner = new EnemySpawner(world, player);
-                createCollisionTiles();
-
-                // Transition state
-                gsm.setState(new GameOverState(gsm, this));
-            });
-        }
-           */
         world.step(delta, 8, 3);
 
         /*************** Collisions ***************/
@@ -329,7 +346,6 @@ public class PlayingState extends GameState {
         for (int x = startX; x <= endX + 1; x++) {
             vertices.add(new Vector2(x * tileWidth, y * tileHeight + tileHeight)); // main platform need to be top of the tile
         }
-
         // Add end ghost vertex (right edge of last tile's ghost)
         vertices.add(new Vector2((endX + 1) * tileWidth, y * tileHeight));
 

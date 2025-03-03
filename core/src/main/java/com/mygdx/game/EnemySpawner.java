@@ -9,24 +9,20 @@ import com.badlogic.gdx.utils.Array;
 import java.util.Iterator;
 
 public class EnemySpawner {
+
     private Array<Enemy> enemies = new Array<>();
-    private Array<Vector2> spawnPoints = new Array<>();
+    public Array<Vector2> spawnPoints = new Array<>();
     private World world;
     private Player player;
-    private Array<Vector2> enemiesLevel1 = new Array<>();
+
 
     public EnemySpawner(World world, Player player) {
         this.world = world;
         this.player = player;
+    }
 
-        enemiesLevel1.add(new Vector2(9, 6.85f));
-        enemiesLevel1.add(new Vector2(10, 6.85f));
-        enemiesLevel1.add(new Vector2(15.7f, 6.4f));
-        enemiesLevel1.add(new Vector2(21.8f, 5.85f));
-        enemiesLevel1.add(new Vector2(33.5f, 8.85f));
-        enemiesLevel1.add(new Vector2(37.25f, 9.85f));
-
-        spawnPoints.addAll(enemiesLevel1);
+    public void setSpawnPoints(Array<Vector2> points) {
+        this.spawnPoints = points;
         spawnEnemy();
     }
 
