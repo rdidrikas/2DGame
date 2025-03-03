@@ -23,6 +23,7 @@ public class Player {
     private boolean isJumping = false;
 
     private AnimationManager animationManager;
+    public PlayingState playingState;
 
     private float playerX, playerY;
     private float width, height;
@@ -38,7 +39,7 @@ public class Player {
     private Array<Body> bulletsToRemove;
 
 
-    public Player(World world, float x, float y, float width, float height, Array<Body> bulletsToRemove) {
+    public Player(World world, float x, float y, float width, float height, Array<Body> bulletsToRemove, PlayingState playingState) {
 
         this.width = width;
         this.height = height;
@@ -51,6 +52,9 @@ public class Player {
         this.isFiring = false;
         this.isShot = false;
         this.levelCompleted = false;
+
+        this.playingState = playingState;
+        this.bulletsToRemove = bulletsToRemove;
 
         animationManager = new AnimationManager();
         loadAnimations();
@@ -126,6 +130,7 @@ public class Player {
             deathTimer -= delta;
             if (deathTimer <= 0) {
                 isShot = false; // Unlock player
+                playingState.resetPosition();
                 reset(); // Reset player position
             }
         }
@@ -216,7 +221,7 @@ public class Player {
     }
 
     public void reset() {
-        body.setTransform(100 / Constants.PPM, 300 / Constants.PPM, 0);
+
         // body.setLinearVelocity(0, 0);
         isShot = false;
         isOnGround = isGrounded();

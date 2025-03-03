@@ -17,7 +17,7 @@ public class LevelManager {
 
     private void loadLevels() {
         Json json = new Json();
-        for(int i = 2; i <= maxLevels; i++) {
+        for(int i = 1; i <= maxLevels; i++) {
             Level level = json.fromJson(
                 Level.class,
                 Gdx.files.internal("levels/level" + i + ".json")

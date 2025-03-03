@@ -75,7 +75,8 @@ public class PlayingState extends GameState {
             currentLevel.playerStartPosition.y,
             32/Constants.PPM,
             32/Constants.PPM,
-            bulletsToRemove
+            bulletsToRemove,
+            this
         );
 
         // Initialize enemies
@@ -396,11 +397,8 @@ public class PlayingState extends GameState {
         bodiesToRemove.add(body);
     }
 
-    public void reset() {
-        player.reset();
-        // Reset other game elements as needed
-        spawner.reset();
-        bulletsToRemove.clear();
+    public void resetPosition() {
+        player.getBody().setTransform(levelManager.getCurrentLevel().playerStartPosition, 0);
     }
 
     public void resetWorld() {
@@ -413,7 +411,7 @@ public class PlayingState extends GameState {
         world = new World(new Vector2(0, Constants.GRAVITY), true);
 
         // 3. Reinitialize everything
-        player = new Player(world, 100/Constants.PPM, 300/Constants.PPM, 32/Constants.PPM, 32/Constants.PPM, bulletsToRemove);
+        player = new Player(world, 100/Constants.PPM, 300/Constants.PPM, 32/Constants.PPM, 32/Constants.PPM, bulletsToRemove, this);
         spawner = new EnemySpawner(world, player);
 
         // 4. Recreate collision tiles
