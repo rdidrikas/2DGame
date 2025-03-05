@@ -150,21 +150,22 @@ public class PlayingState extends GameState {
                 Object userDataA = fixtureA.getUserData();
                 Object userDataB = fixtureB.getUserData();
 
+
                 if (userDataA instanceof Bullet && userDataB instanceof Enemy) {
-                    System.out.println("Bullet hit enemy");
+                    // System.out.println("Bullet hit enemy");
                     ((Enemy) userDataB).dead();
                     removeBodiesQueue(fixtureB);
                 } else if (userDataA instanceof Enemy && userDataB instanceof Bullet) {
-                    System.out.println("Bullet hit enemy");
+                    // System.out.println("Bullet hit enemy");
                     ((Enemy) userDataA).dead();
                     removeBodiesQueue(fixtureA);
                 }
 
                 if (userDataA instanceof EnemyBullet && userDataB instanceof Player) {
-                    System.out.println("Bullet hit enemy");
+                    // System.out.println("Bullet hit enemy");
                     ((Player) userDataB).dead();
                 } else if (userDataA instanceof Player && userDataB instanceof EnemyBullet) {
-                    System.out.println("Bullet hit enemy");
+                    // System.out.println("Bullet hit enemy");
                     ((Player) userDataA).dead();
                 }
 
@@ -267,7 +268,7 @@ public class PlayingState extends GameState {
 
         /*********** DEBUGGER **********/
 
-        debugRenderer.render(world, camera.combined);
+        //debugRenderer.render(world, camera.combined);
     }
 
 
@@ -421,6 +422,10 @@ public class PlayingState extends GameState {
         bulletsToRemove.clear();
     }
 
+    private boolean isDeadEnemy(Fixture fixture) {
+        Object userData = fixture.getUserData();
+        return (userData instanceof Enemy && ((Enemy) userData).isShot);
+    }
 
     @Override
     public void dispose() {

@@ -331,6 +331,7 @@ public class Enemy {
             currentState = State.DEAD;
             isShot = true;
             animationManager.stateTime = 0;
+            // world.destroyBody(body);
         }
     }
 
