@@ -33,9 +33,6 @@ public class EnemySpawner {
     }
 
     public void update(float delta, Vector2 playerPosition) {
-        for (Enemy enemy : enemies) {
-            enemy.update(delta, playerPosition);
-        }
         Iterator<Enemy> iterator = enemies.iterator();
         while(iterator.hasNext()){
             Enemy enemy = iterator.next();
@@ -45,6 +42,10 @@ public class EnemySpawner {
                 iterator.remove();
             }
         }
+        for (Enemy enemy : enemies) {
+            enemy.update(delta, playerPosition);
+        }
+
     }
 
     public void render(SpriteBatch batch) {

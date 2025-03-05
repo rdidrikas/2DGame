@@ -25,6 +25,7 @@ public class Enemy {
     private int health = 10;
     public boolean isMoving;
     private float width, height;
+    private Vector2 deathPosition;
 
     private enum State { PATROL, ATTACK, DEAD }
     private State currentState = State.PATROL;
@@ -140,11 +141,11 @@ public class Enemy {
 
         // Idle (single frame)
         TextureRegion[] idleFrames = { tmpFrames[0][0] };
-        animationManager.addAnimation("enemyNormalIdle", new Animation<>(0.1f, idleFrames));
+        animationManager.addAnimation("enemyNormalIdle", new Animation<>(0.2f, idleFrames));
 
         // Walk (loop)
         TextureRegion[] walkFrames = { tmpFrames[0][1], tmpFrames[0][2], tmpFrames[0][3] };
-        animationManager.addAnimation("enemyNormalWalk", new Animation<>(0.3f, walkFrames));
+        animationManager.addAnimation("enemyNormalWalk", new Animation<>(0.5f, walkFrames));
 
         // Enemy shot animation
         TextureRegion[] enemyShotFrames = new TextureRegion[15];
@@ -176,10 +177,10 @@ public class Enemy {
 
             detectPlayer(delta);
             handleState(delta);
-            animationManager.update(delta, isGroundedEnemy(), isMoving, isFiring, isShot, 3);
+            animationManager.update(delta, isGroundedEnemy(), this.isMoving, this.isFiring, this.isShot, 3);
         }
 
-        animationManager.update(delta, isGroundedEnemy(), isMoving, isFiring, isShot,2);
+        animationManager.update(delta, isGroundedEnemy(), this.isMoving, this.isFiring, this.isShot,2);
 
 
         Iterator<EnemyBullet> iterator = bullets.iterator();
@@ -191,7 +192,7 @@ public class Enemy {
             }
         }
 
-        if(isShot){
+        if(this.isShot){
             deathTimer -= delta;
             if(deathTimer <= 0){
                 alreadyRendered = true;
@@ -206,8 +207,15 @@ public class Enemy {
             return;
         }
 
-        float x = body.getPosition().x - width / 2;
-        float y = body.getPosition().y - height / 2 + Constants.SPRITE_YOFFSET;
+        float x, y;
+
+        if(currentState == State.DEAD){
+            x = deathPosition.x - width / 2;
+            y = deathPosition.y - height / 2 + Constants.SPRITE_YOFFSET;
+        } else {
+            x = body.getPosition().x - width / 2;
+            y = body.getPosition().y - height / 2 + Constants.SPRITE_YOFFSET;
+        }
 
         TextureRegion currentEnemyFrame = animationManager.getCurrentPlayerFrame(enemyIsFacingLeft);
 
@@ -222,10 +230,6 @@ public class Enemy {
         for (EnemyBullet bullet : bullets) {
             bullet.render(batch, animationManager.getBulletFrame("enemyBullet"), enemyIsFacingLeft);
         }
-    }
-
-    private void destroy() {
-        // Remove the enemy from the world
     }
 
     public boolean isGroundedEnemy() {
@@ -327,10 +331,12 @@ public class Enemy {
     }
 
     public void dead(){
-        if(!isShot) {
+        if(!this.isShot) {
             currentState = State.DEAD;
-            isShot = true;
+            this.isShot = true;
             animationManager.stateTime = 0;
+            deathPosition = body.getPosition().cpy();
+
             // world.destroyBody(body);
         }
     }
