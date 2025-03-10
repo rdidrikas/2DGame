@@ -81,10 +81,11 @@ public class Player {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
-        fixtureDef.friction = 0.00001f;
+        fixtureDef.friction = 0.000001f;
         fixtureDef.restitution = 0f;
 
-        body.setLinearDamping(0f);
+        //body.setLinearDamping(0f);
+        //body.setAngularDamping(0f);
 
         fixtureDef.filter.categoryBits = Constants.PLAYER_CATEGORY;
         fixtureDef.filter.maskBits = Constants.TILE_CATEGORY | Constants.ENEMY_BULLET_CATEGORY;
@@ -116,6 +117,12 @@ public class Player {
         }
         animationManager.addAnimation("jump", new Animation<>(0.2f, jumpFrames));
 
+        // Wall slide (single frame)
+        TextureRegion[] wallSlideFrames1 = { tmpFrames[0][11], tmpFrames[0][12], tmpFrames[0][13] };
+        animationManager.addAnimation("wallSlide1", new Animation<>(0.1f, wallSlideFrames1));
+        TextureRegion[] wallSlideFrames2 = { tmpFrames[0][14], tmpFrames[0][15], tmpFrames[0][16] };
+        animationManager.addAnimation("wallSlide2", new Animation<>(0.1f, wallSlideFrames2));
+
         // Player dead
         TextureRegion[] deadFrames = { tmpFrames[7][11]};
         deadFrames[0].flip(true, false); // Flip the frame
@@ -125,6 +132,12 @@ public class Player {
 
 
     public void update(float delta) {
+
+        if (body.getPosition().y < 0.1) {
+            isShot = true;
+            playingState.resetPosition();
+            reset();
+        }
 
         if (isShot) {
             deathTimer -= delta;
@@ -141,7 +154,7 @@ public class Player {
             body.setLinearVelocity(0, body.getLinearVelocity().y); // Prevents sliding
         }
 
-        animationManager.update(delta, isGrounded(), isMoving, isFiring, isShot,0); // player render animation
+        animationManager.update(delta, isGrounded(), isMoving, isFiring, isShot,false, 0); // player render animation
         gun.update(delta, isGrounded(), isMoving, isFiring, isFacingLeft); // render gun animation
 
 
@@ -156,6 +169,7 @@ public class Player {
             }
         }
 
+        isFiring = false;
 
     }
 
@@ -171,19 +185,14 @@ public class Player {
 
     }
 
-
-    public void setMoving(boolean moving) {
-        isMoving = moving;
-    }
-
     public void fire() {
+        isFiring = true;
         gun.fire(body.getWorld(), body.getPosition().x, body.getPosition().y, 0);
     }
 
     public void jump() {
         if (canJump) {
-            // body.setGravityScale(0.15f);
-            // body.applyLinearImpulse(new Vector2(0, Constants.PLAYER_JUMP), body.getWorldCenter(), true);
+
             body.setLinearVelocity(body.getLinearVelocity().x, Constants.PLAYER_JUMP);
             canJump = false;
             isJumping = true;
@@ -242,4 +251,8 @@ public class Player {
         this.isShot = true;
     }
 
+
+    public void dispose() {
+        gun.dispose();
+    }
 }

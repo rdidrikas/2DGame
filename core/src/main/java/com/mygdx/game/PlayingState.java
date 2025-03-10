@@ -1,5 +1,6 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
@@ -20,7 +21,6 @@ import com.badlogic.gdx.utils.Array;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.abs;
 
@@ -42,7 +42,7 @@ public class PlayingState extends GameState {
 
     public Array<Body> bodiesToRemove = new Array<>();
 
-
+    float step = 1/60f; // Fixed timestep
 
     public PlayingState(GameStateManager gsm) {
         super(gsm);
@@ -51,6 +51,54 @@ public class PlayingState extends GameState {
         initializeLevel();
 
         /*************** Collisions ***************/
+
+
+
+
+    }
+
+
+    /********* LEVEL MANAGEMENT *********/
+
+
+    private void initializeLevel() {
+        // Clear existing world
+        if(world != null) world.dispose();
+
+        // Create new world
+        world = new World(new Vector2(0, Constants.GRAVITY), true);
+        debugRenderer = new Box2DDebugRenderer();
+
+        // Load level-specific map
+        Level currentLevel = levelManager.getCurrentLevel();
+        map = new TmxMapLoader().load(currentLevel.mapFile);
+        renderer = new OrthogonalTiledMapRenderer(map, 1 / Constants.PPM);
+
+        // Initialize player at level's start position
+        player = new Player(world,
+            currentLevel.playerStartPosition.x,
+            currentLevel.playerStartPosition.y,
+            32/Constants.PPM,
+            32/Constants.PPM,
+            bulletsToRemove,
+            this
+        );
+
+        // Initialize enemies
+        spawner = new EnemySpawner(world, player);
+        spawner.spawnPoints.clear();
+        spawner.setSpawnPoints(currentLevel.enemySpawnPoints);
+
+        createCollisionTiles();
+
+        // Set camera viewport to METERS
+        camera = new OrthographicCamera();
+        camera.setToOrtho(
+            false,
+            Gdx.graphics.getWidth() / Constants.PPM,  // Viewport width (meters)
+            Gdx.graphics.getHeight() / Constants.PPM  // Viewport height (meters)
+        );
+        camera.zoom = 0.3f; // *** PPM CHANGE: Zoom out camera
 
         world.setContactListener(new ContactListener() {
             @Override
@@ -122,52 +170,6 @@ public class PlayingState extends GameState {
                 // Handle post-solve
             }
         });
-
-
-    }
-
-
-    /********* LEVEL MANAGEMENT *********/
-
-
-    private void initializeLevel() {
-        // Clear existing world
-        if(world != null) world.dispose();
-
-        // Create new world
-        world = new World(new Vector2(0, Constants.GRAVITY), true);
-        debugRenderer = new Box2DDebugRenderer();
-
-        // Load level-specific map
-        Level currentLevel = levelManager.getCurrentLevel();
-        map = new TmxMapLoader().load(currentLevel.mapFile);
-        renderer = new OrthogonalTiledMapRenderer(map, 1 / Constants.PPM);
-
-        // Initialize player at level's start position
-        player = new Player(world,
-            currentLevel.playerStartPosition.x,
-            currentLevel.playerStartPosition.y,
-            32/Constants.PPM,
-            32/Constants.PPM,
-            bulletsToRemove,
-            this
-        );
-
-        // Initialize enemies
-        spawner = new EnemySpawner(world, player);
-        spawner.spawnPoints.clear();
-        spawner.setSpawnPoints(currentLevel.enemySpawnPoints);
-
-        createCollisionTiles();
-
-        // Set camera viewport to METERS
-        camera = new OrthographicCamera();
-        camera.setToOrtho(
-            false,
-            Gdx.graphics.getWidth() / Constants.PPM,  // Viewport width (meters)
-            Gdx.graphics.getHeight() / Constants.PPM  // Viewport height (meters)
-        );
-        camera.zoom = 0.3f; // *** PPM CHANGE: Zoom out camera
     }
 
     public void nextLevel() {
@@ -209,9 +211,7 @@ public class PlayingState extends GameState {
 
         checkLevelCompletion();
 
-
-        world.step(delta, 8, 3);
-
+        world.step(step, 6, 2);
 
         float playerX = player.getBody().getPosition().x;
         float playerY = player.getBody().getPosition().y;
@@ -222,21 +222,14 @@ public class PlayingState extends GameState {
 
         // Update camera position
 
-        if (playerX < 200 / Constants.PPM) {
-            camera.position.set(
-                200 / Constants.PPM,
-                playerY,
-                0
-            );
-        } else {
-            camera.position.set(
-                playerX,
-                playerY,
-                0
-            );
-        }
+        camera.position.set(
+            (Math.max(playerX, 6.25f)), // Out of bounds check
+            (Math.max(playerY, 3.75f)),
+            0
+        );
 
         camera.update();
+
 
     }
 
@@ -308,6 +301,7 @@ public class PlayingState extends GameState {
 
     }
 
+    /******* Create collision tiles *******/
 
     private void createCollisionTiles() {
         TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get("Solid");
@@ -416,6 +410,8 @@ public class PlayingState extends GameState {
 
         // 5. Reset other state
         bulletsToRemove.clear();
+        bodiesToRemove.clear();
+
     }
 
     private boolean isDeadEnemy(Fixture fixture) {
@@ -427,5 +423,8 @@ public class PlayingState extends GameState {
     public void dispose() {
         world.dispose();
         debugRenderer.dispose();
+        renderer.dispose();
+        map.dispose();
+        world.setContactListener(null);
     }
 }

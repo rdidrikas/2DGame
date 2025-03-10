@@ -36,7 +36,7 @@ public class Constants {
     public static final float ENEMY_BULLET_SPEED = 7f;
     public static final float ENEMY_BULLET_ALIVE_TIME = 2f;
     public static final float ENEMY_DEATH_TIMER = 3f;
-    public static final float ENEMY_DETECTION_REACTION = 1f;
+    public static final float ENEMY_DETECTION_REACTION = 0.7f;
 
 
 }

@@ -10,7 +10,7 @@ import static java.lang.Math.abs;
 public class Bullet {
 
     private Body body; // Box2D body for physics
-    private boolean active = true; // Track if the bullet is active
+    private boolean active; // Track if the bullet is active
     private float startPosition;
 
     private boolean markedForRemoval = false;
@@ -19,6 +19,8 @@ public class Bullet {
     public Bullet(World world, float x, float y, float angle, boolean isFacingLeft) {
 
         // Create a Box2D body for the bullet
+
+        this.active = true;
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set(x + (isFacingLeft ? -Constants.RAMBO_BULLET_XOFFSET : Constants.RAMBO_BULLET_XOFFSET),
@@ -64,11 +66,11 @@ public class Bullet {
     public void update(float delta, boolean isFacingLeft) {
 
         // Deactivate the bullet if it goes too far
-        if (active) {
+        if (this.active) {
             float currentPosition = body.getPosition().x;
             float distanceTraveled = currentPosition - startPosition;
             if (abs(distanceTraveled) > Constants.RAMBO_BULLET_DISTANCE) {
-                active = false;
+                this.active = false;
                 markedForRemoval = true;
             }
 
@@ -78,7 +80,8 @@ public class Bullet {
 
     public void render(SpriteBatch batch, TextureRegion bulletTexture, boolean isFacingLeft) {
 
-        if (active) {
+        if (this.active) {
+
             float newHeight = bulletTexture.getRegionHeight() / Constants.PPM;
             float newWidth = bulletTexture.getRegionWidth() / Constants.PPM;
 
@@ -100,7 +103,7 @@ public class Bullet {
 
     public void markForRemoval() {
         markedForRemoval = true;
-        active = false;
+        this.active = false;
     }
 
     public boolean isMarkedForRemoval() {

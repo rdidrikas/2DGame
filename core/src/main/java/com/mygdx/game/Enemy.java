@@ -34,6 +34,7 @@ public class Enemy {
     public boolean isFiring;
     public boolean isShot;
     public boolean alreadyRendered;
+    public boolean playerDetected;
     private float patrolCooldown = 0;
     public float deathTimer;
     private float reactionTime = Constants.ENEMY_DETECTION_REACTION;
@@ -54,6 +55,7 @@ public class Enemy {
         this.isFiring = false;
         this.alreadyRendered = false;
         this.deathTimer = Constants.ENEMY_DEATH_TIMER;
+        this.playerDetected = false;
 
         enemyIsFacingLeft = false;
         width = 32 / Constants.PPM;
@@ -127,11 +129,15 @@ public class Enemy {
         };
         animationManager.addAnimation("enemyGunWalk", new Animation<>(0.5f, gunWalkFrames));
 
+        // Gun detected
+        TextureRegion[] gunDetectFrames = {
+            tmpGunFrames[1][1], tmpGunFrames[1][2], tmpGunFrames[1][3],
+            tmpGunFrames[1][7], tmpGunFrames[1][8], tmpGunFrames[1][9]};
+        animationManager.addAnimation("enemyGunDetect", new Animation<>(0.5f, gunDetectFrames));
+
         // Gun animation fire
-        TextureRegion[] gunFireFrames = {
-                tmpGunFrames[0][1], tmpGunFrames[0][2], tmpGunFrames[0][3],
-                tmpGunFrames[0][7], tmpGunFrames[0][8], tmpGunFrames[0][9]};
-        animationManager.addAnimation("enemyGunFire", new Animation<>(0.1f, gunFireFrames));
+        TextureRegion[] gunFireFrames = { tmpGunFrames[0][1], tmpGunFrames[0][2], tmpGunFrames[0][3]};
+        animationManager.addAnimation("enemyGunFire", new Animation<>(0.5f, gunFireFrames));
 
 
         // Bullet animation
@@ -177,10 +183,10 @@ public class Enemy {
 
             detectPlayer(delta);
             handleState(delta);
-            animationManager.update(delta, isGroundedEnemy(), this.isMoving, this.isFiring, this.isShot, 3);
+            animationManager.update(delta, isGroundedEnemy(), this.isMoving, this.isFiring, this.isShot, this.playerDetected,3);
         }
 
-        animationManager.update(delta, isGroundedEnemy(), this.isMoving, this.isFiring, this.isShot,2);
+        animationManager.update(delta, isGroundedEnemy(), this.isMoving, this.isFiring, this.isShot, this.playerDetected,2);
 
 
         Iterator<EnemyBullet> iterator = bullets.iterator();
@@ -198,6 +204,8 @@ public class Enemy {
                 alreadyRendered = true;
             }
         }
+
+
 
     }
 
@@ -230,6 +238,8 @@ public class Enemy {
         for (EnemyBullet bullet : bullets) {
             bullet.render(batch, animationManager.getBulletFrame("enemyBullet"), enemyIsFacingLeft);
         }
+
+        isFiring = false;
     }
 
     public boolean isGroundedEnemy() {
@@ -239,12 +249,12 @@ public class Enemy {
 
     private boolean hasLineOfSight() {
         float xDiff = player.getBody().getPosition().y - body.getPosition().y;
-        return abs(xDiff) < 0.2;
+        return abs(xDiff) < 0.4;
     }
 
     private void detectPlayer(float delta) {
 
-        float detectionRadius = 3f; // Meters
+        float detectionRadius = 5f; // Meters
         float distance = body.getPosition().x - player.getBody().getPosition().x;
 
         if (abs(distance) <= detectionRadius && hasLineOfSight()) {
@@ -252,6 +262,7 @@ public class Enemy {
                 reactionTime -= delta;
                 if (reactionTime <= 0) {
                     currentState = State.ATTACK;
+                    playerDetected = true;
                 }
             }
         } else {

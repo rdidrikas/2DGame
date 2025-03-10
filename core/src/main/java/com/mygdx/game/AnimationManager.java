@@ -25,12 +25,13 @@ public class AnimationManager {
         animations.put(name, animation);
     }
 
-    public void update(float delta, boolean isGrounded, boolean isMoving, boolean isFiring, boolean isShot, int type) {
+    public void update(float delta, boolean isGrounded, boolean isMoving, boolean isFiring, boolean isShot, boolean playerDetected, int type ) {
         stateTime += delta;
         animIsShot = isShot; // Used to play animation only one time
         // type == 0 -> player
         // type == 1 -> gun
         // type == 2 -> enemy
+        // type == 3 -> enemy gun
 
         // Update animation state based on player conditions
 
@@ -67,6 +68,8 @@ public class AnimationManager {
         } else if (type == 3) {
             if (isFiring) {
                 currentGunState = "enemyGunFire";
+            } else if(playerDetected) {
+                currentGunState = "enemyGunDetect";
             } else if (isMoving) {
                 currentGunState = "enemyGunWalk";
             } else {

@@ -52,7 +52,7 @@ public class Gun {
         TextureRegion[] gunFireFrames = {
             tmpGunFrames[0][1], tmpGunFrames[0][2], tmpGunFrames[0][3],
             tmpGunFrames[0][7], tmpGunFrames[0][8], tmpGunFrames[0][9]};
-        animationManager.addAnimation("gunFire", new Animation<>(0.1f, gunFireFrames));
+        animationManager.addAnimation("gunFire", new Animation<>(0.2f, gunFireFrames));
 
         TextureRegion[][] tmpBulletFrames = TextureRegion.split(bulletSheet, 16, 16);
 
@@ -70,7 +70,7 @@ public class Gun {
             shotTimer -= delta;
         }
 
-        animationManager.update(delta, isGrounded, isMoving, isFiring, isShot,1);
+        animationManager.update(delta, isGrounded, isMoving, isFiring, isShot, false,1);
 
         Iterator<Bullet> iterator = bullets.iterator();
         while (iterator.hasNext()) {
@@ -101,5 +101,8 @@ public class Gun {
 
     }
 
+    public void dispose() {
+        bulletSheet.dispose();
+    }
 
 }
