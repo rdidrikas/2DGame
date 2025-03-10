@@ -10,7 +10,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Set;
 
 import static java.lang.Math.abs;
 
@@ -42,7 +44,7 @@ public class Enemy {
     private AnimationManager animationManager;
     private boolean enemyIsFacingLeft;
 
-    public LinkedList<EnemyBullet> bullets = new LinkedList<EnemyBullet>();
+    public Set<EnemyBullet> bullets = new LinkedHashSet<>();
 
     public Enemy(World world, float x, float y, Player player) {
 

@@ -41,7 +41,7 @@ public class PlayingState extends GameState {
 
     // Removing bullets inside world.step() causes a crash
     public Set<Body> bulletsToRemove = new LinkedHashSet<>();
-    public Array<Body> bodiesToRemove = new Array<>();
+    public Set<Body> bodiesToRemove = new LinkedHashSet<>();
 
     float step = 1/60f; // Fixed timestep
 
@@ -258,7 +258,7 @@ public class PlayingState extends GameState {
 
         /*********** DEBUGGER **********/
 
-        // debugRenderer.render(world, camera.combined);
+         debugRenderer.render(world, camera.combined);
     }
 
 
