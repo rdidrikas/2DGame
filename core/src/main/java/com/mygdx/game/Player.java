@@ -12,6 +12,8 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import org.lwjgl.Sys;
 
+import java.util.Set;
+
 public class Player {
 
     private Body body;
@@ -36,10 +38,11 @@ public class Player {
     public boolean levelCompleted;
 
     public float deathTimer = Constants.PLAYER_DEATH_DURATION;
-    private Array<Body> bulletsToRemove;
+    public Set<Body> bulletsToRemove;
 
 
-    public Player(World world, float x, float y, float width, float height, Array<Body> bulletsToRemove, PlayingState playingState) {
+
+    public Player(World world, float x, float y, float width, float height, Set<Body> bulletsToRemove, PlayingState playingState) {
 
         this.width = width;
         this.height = height;

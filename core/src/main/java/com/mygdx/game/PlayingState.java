@@ -20,7 +20,9 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import static java.lang.Math.abs;
 
@@ -38,8 +40,7 @@ public class PlayingState extends GameState {
     private boolean wasSpacePressed = false;
 
     // Removing bullets inside world.step() causes a crash
-    public Array<Body> bulletsToRemove = new Array<>();
-
+    public Set<Body> bulletsToRemove = new LinkedHashSet<>();
     public Array<Body> bodiesToRemove = new Array<>();
 
     float step = 1/60f; // Fixed timestep
@@ -257,7 +258,7 @@ public class PlayingState extends GameState {
 
         /*********** DEBUGGER **********/
 
-        debugRenderer.render(world, camera.combined);
+        // debugRenderer.render(world, camera.combined);
     }
 
 

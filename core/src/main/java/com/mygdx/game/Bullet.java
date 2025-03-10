@@ -104,6 +104,7 @@ public class Bullet {
     public void markForRemoval() {
         markedForRemoval = true;
         this.active = false;
+        body.setUserData(null);
     }
 
     public boolean isMarkedForRemoval() {

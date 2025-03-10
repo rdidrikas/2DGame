@@ -2,6 +2,7 @@ package com.mygdx.game;
 
 import java.util.LinkedList;
 import java.util.Iterator;
+import java.util.Set;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -24,9 +25,8 @@ public class Gun {
 
     private float shotTimer = 0f;
 
-    private Array<Body> bulletsToRemove;
-
-    public Gun(Array<Body> bulletsToRemove) {
+    public Set<Body> bulletsToRemove;
+    public Gun(Set<Body> bulletsToRemove) {
         this.bulletsToRemove = bulletsToRemove;
         animationManager = new AnimationManager();
         loadGunAnimations();
@@ -78,7 +78,10 @@ public class Gun {
             bullet.update(delta, isFacingLeft);
             if (bullet.isMarkedForRemoval()) {
                 iterator.remove();
-                bulletsToRemove.add(bullet.getBody());
+                Body body = bullet.getBody();
+                if (body != null && body.isActive()) { // Check if body is active
+                    bulletsToRemove.add(body);
+                }
             }
         }
 
