@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -40,7 +41,8 @@ public class Player {
     public float deathTimer = Constants.PLAYER_DEATH_DURATION;
     public Set<Body> bulletsToRemove;
 
-
+    // Sounds
+    Sound[] bulletSounds = new Sound[5];
 
     public Player(World world, float x, float y, float width, float height, Set<Body> bulletsToRemove, PlayingState playingState) {
 
@@ -100,6 +102,7 @@ public class Player {
 
 
     }
+
 
     private void loadAnimations() {
         Texture playerSheet = new Texture("Animations/RAMBO_anim.png");

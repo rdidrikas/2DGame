@@ -1,5 +1,7 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -30,7 +32,7 @@ public class Enemy {
     private float width, height;
     private Vector2 deathPosition;
 
-    private enum State { PATROL, ATTACK, DEAD }
+    private enum State { PATROL, ATTACK, DEAD, IDLE }
     private State currentState = State.PATROL;
     private Vector2 patrolTarget;
     private float shootTimer = 0;
@@ -41,12 +43,20 @@ public class Enemy {
     private float patrolCooldown = 0;
     public float deathTimer;
     private float reactionTime = Constants.ENEMY_DETECTION_REACTION;
+    private float delay = 5f; // When player is detected and out of sight, wait before turning left
 
     private AnimationManager animationManager;
     private boolean enemyIsFacingLeft;
 
     public Set<EnemyBullet> bullets = new LinkedHashSet<>();
     public Set<Body> bulletsToRemove;
+
+
+    // Sounds
+
+    Sound[] bulletSounds = new Sound[5];
+
+
 
     public Enemy(World world, float x, float y, Player player, Set<Body> bulletsToRemove) {
 
@@ -103,8 +113,18 @@ public class Enemy {
 
         shape.dispose();
 
+        loadSounds();
         loadAnimations();
         setRandomPatrolTarget();
+
+    }
+
+    private void loadSounds(){
+
+        for (int i = 1; i <= 5; i++) {
+            Sound bulletSound = Gdx.audio.newSound(Gdx.files.internal("Sounds/Guns/Enemy/GunShotNormal" + i + ".wav"));
+            bulletSounds[i - 1] = bulletSound;
+        }
 
     }
 
@@ -175,6 +195,7 @@ public class Enemy {
 
     }
 
+
     public void update(float delta, Vector2 playerPosition) {
 
         for (EnemyBullet bullet : bullets) {
@@ -188,8 +209,23 @@ public class Enemy {
 
             detectPlayer(delta);
             handleState(delta);
+
+            if (currentState == State.ATTACK && !hasLineOfSight()) {
+                delay -= delta;
+                if (delay <= 0) {
+                    body.applyLinearImpulse(MathUtils.random(-0.3f, 0.3f), 0, body.getWorldCenter().x, body.getWorldCenter().y, true);
+                    enemyIsFacingLeft = body.getLinearVelocity().x < 0;
+                    delay = 3f;
+                }
+
+            }
+
             animationManager.update(delta, isGroundedEnemy(), this.isMoving, this.isFiring, this.isShot, this.playerDetected,3);
+
+
         }
+
+
 
         animationManager.update(delta, isGroundedEnemy(), this.isMoving, this.isFiring, this.isShot, this.playerDetected,2);
 
@@ -296,7 +332,8 @@ public class Enemy {
     }
 
     private void setRandomPatrolTarget() {
-        patrolCooldown = 10f;
+        patrolCooldown = 8f;
+        currentState = State.PATROL;
         patrolTarget = new Vector2(
             body.getPosition().x + MathUtils.random(-3, 3),
             body.getPosition().y
@@ -311,6 +348,7 @@ public class Enemy {
 
         if (body.getPosition().dst(patrolTarget) < 0.2f) {
             isMoving = false;
+            currentState = State.IDLE;
             if(patrolCooldown <= 0){
                 setRandomPatrolTarget();
             }
@@ -327,12 +365,11 @@ public class Enemy {
         // Stop moving when attacking
         body.setLinearVelocity(0, 0);
         isMoving = false;
-        enemyIsFacingLeft = player.getBody().getPosition().x <= body.getPosition().x; // Face Player
 
         shootTimer -= delta;
         if (shootTimer <= 0) {
             shoot();
-            shootTimer = (float) (Math.random() * (Constants.ENEMY_MAX_SHOT_COOLDOWN - Constants.ENEMY_MIN_SHOT_COOLDOWN) + Constants.ENEMY_MIN_SHOT_COOLDOWN);
+            shootTimer = MathUtils.random(Constants.ENEMY_MIN_SHOT_COOLDOWN, Constants.ENEMY_MAX_SHOT_COOLDOWN);
             // System.out.println("Enemy shot");
         }
     }
@@ -349,6 +386,8 @@ public class Enemy {
         Vector2 spawnPos = body.getPosition().cpy().add(offsetX, 0);
 
         bullets.add(new EnemyBullet(world, spawnPos.x, spawnPos.y, enemyIsFacingLeft, playerIsLeft));
+        bulletSounds[MathUtils.random(0, 4)].play(0.8f);
+
     }
 
     public void dead(){

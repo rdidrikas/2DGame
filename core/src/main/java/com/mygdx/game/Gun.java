@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
@@ -18,6 +19,7 @@ import com.badlogic.gdx.utils.Array;
 public class Gun {
 
     public LinkedList<Bullet> bullets = new LinkedList<>();
+    public Set<Body> bulletsToRemove;
     private Texture bulletSheet = new Texture("Animations/Bullet Friendly.png");
 
     private AnimationManager animationManager;
@@ -27,11 +29,17 @@ public class Gun {
 
     private float shotTimer = 0f;
 
-    public Set<Body> bulletsToRemove;
+    // Sounds
+    //Sound[] bulletSounds = new Sound[2];
+    Sound bulletSound = Gdx.audio.newSound(Gdx.files.internal("Sounds/Guns/Player/GunShotNormal.wav"));
+
     public Gun(Set<Body> bulletsToRemove) {
+
         this.bulletsToRemove = bulletsToRemove;
         animationManager = new AnimationManager();
         loadGunAnimations();
+        // loadSounds();
+
     }
 
     private void loadGunAnimations() {
@@ -61,6 +69,18 @@ public class Gun {
         // Bullet animation
         TextureRegion[] bulletFrames = {tmpBulletFrames[0][0], tmpBulletFrames[0][1], tmpBulletFrames[0][2]};
         animationManager.addAnimation("bullet", new Animation<>(0.5f, bulletFrames));
+
+    }
+
+
+    private void loadSounds(){
+        /*
+        for (int i = 1; i <= 2; i++) {
+            Sound bulletSound = Gdx.audio.newSound(Gdx.files.internal("Sounds/Guns/Player/GunShotNormal" + i + ".wav"));
+            bulletSounds[i - 1] = bulletSound;
+        }
+        */
+
 
     }
 
@@ -96,13 +116,11 @@ public class Gun {
             bullet.render(batch, animationManager.getBulletFrame("bullet"), isFacingLeft);
         }
     }
-
     public void fire(World world, float x, float y, float angle) {
         if(shotTimer <= 0){
             isFiring = true;
             bullets.add(new Bullet(world, x, y, angle, isFacingLeft));
-            Sound sound = Gdx.audio.newSound(Gdx.files.internal("Sounds/Guns/RamboGunSound2.wav"));
-            sound.play();
+            bulletSound.play(0.8f);
             shotTimer = Constants.RAMBO_SHOT_COOLDOWN;
         }
 
