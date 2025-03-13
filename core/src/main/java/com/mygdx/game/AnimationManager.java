@@ -14,13 +14,13 @@ public class AnimationManager {
     private String currentState;
     private String currentGunState;
 
-    public float stateTime;
-    public float gunStateTime;
-    public float enemyStateTime;
-    public float enemyGunStateTime;
-    public float bulletStateTime;
-    public float someStateTime;
-    public float playerStateTime;
+    private float stateTime;
+    private float gunStateTime;
+    private float enemyStateTime;
+    private float enemyGunStateTime;
+    private float bulletStateTime;
+    private float someStateTime;
+    private float playerStateTime;
 
     public boolean animIsShot;
 
@@ -42,12 +42,12 @@ public class AnimationManager {
 
     public void update(float delta, boolean isGrounded, boolean isMoving, boolean isFiring, boolean isShot, boolean playerDetected, int type ) {
         stateTime += delta;
-        playerStateTime = stateTime;
-        gunStateTime = stateTime;
-        enemyStateTime = stateTime;
-        enemyGunStateTime = stateTime;
-        bulletStateTime = stateTime;
-        someStateTime = stateTime;
+        playerStateTime += delta;
+        gunStateTime += delta;
+        enemyStateTime += delta;
+        enemyGunStateTime += delta;
+        bulletStateTime += delta;
+        someStateTime += delta;
 
         animIsShot = isShot; // Used to play animation only one time
         // type == 0 -> player
@@ -78,7 +78,7 @@ public class AnimationManager {
             }
         } else if(type == 2){
             if (isShot) {
-                if (animations.get("enemyNormalShot").isAnimationFinished(stateTime)) { // Dont know why it doesnt work with enemyStateTime
+                if (animations.get("enemyNormalShot").isAnimationFinished(enemyStateTime)) { // Dont know why it doesnt work with enemyStateTime
                     currentState = "enemyNormalDead";
                 }
                 else currentState = "enemyNormalShot";
@@ -153,8 +153,16 @@ public class AnimationManager {
         return animations.get(name).isAnimationFinished(someStateTime);
     }
 
-    public void setStateTime(float stateTime) {
-        this.stateTime = stateTime;
+    public TextureRegion getLastFrame(String name) {
+        return animations.get(name).getKeyFrames()[animations.get(name).getKeyFrames().length - 1];
+    }
+
+    public void resetSomeStateTime() {
+        this.someStateTime = 0;
+    }
+
+    public void resetEnemyStateTime() {
+        this.stateTime = 0;
     }
 
 }

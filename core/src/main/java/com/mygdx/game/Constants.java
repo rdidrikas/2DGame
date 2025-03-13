@@ -40,4 +40,10 @@ public class Constants {
     public static final float ENEMY_DETECTION_REACTION = 1f;
 
 
+    // Misc
+
+    public static final float SMOKE_DURATION = 0.5f;
+    public static final float BUBBLE_DURATION = 1.5f;
+
+
 }

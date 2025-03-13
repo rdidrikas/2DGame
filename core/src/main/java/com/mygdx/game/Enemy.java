@@ -2,6 +2,7 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -10,6 +11,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Array;
+import org.w3c.dom.Text;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -40,13 +43,16 @@ public class Enemy {
     public boolean isShot;
     public boolean alreadyRendered;
     public boolean playerDetected;
+
     private float patrolCooldown = 0;
     public float deathTimer;
     private float reactionTime = Constants.ENEMY_DETECTION_REACTION;
     private float delay; // When player is detected and out of sight, wait before turning left
+    private float bubbleTimer;
 
     private AnimationManager animationManager;
     private boolean enemyIsFacingLeft;
+    private boolean isAnimationPlaying;
 
     public Set<EnemyBullet> bullets = new LinkedHashSet<>();
     public Set<Body> bulletsToRemove;
@@ -72,6 +78,9 @@ public class Enemy {
         this.playerDetected = false;
         this.bulletsToRemove = bulletsToRemove;
         this.delay = 5f;
+        this.isAnimationPlaying = false;
+        this.bubbleTimer = Constants.BUBBLE_DURATION;
+
 
         enemyIsFacingLeft = false;
         width = 32 / Constants.PPM;
@@ -194,6 +203,19 @@ public class Enemy {
         TextureRegion[] enemyDeadFrames = {tmpFrames[11][30]};
         animationManager.addAnimation("enemyNormalDead", new Animation<>(0.1f, enemyDeadFrames));
 
+
+        // Bubbles
+
+        Texture exSheet = new Texture("Animations/Misc/playerDetected.png");
+
+        TextureRegion[][] tmpDetFrames = TextureRegion.split(exSheet, 32, 32);
+        Array<TextureRegion> detectFrames = new Array<>(tmpDetFrames[0]);
+
+        Animation<TextureRegion> detectAnimation = new Animation<>(0.2f, detectFrames);
+        detectAnimation.setPlayMode(Animation.PlayMode.NORMAL);
+        animationManager.addAnimation("playerDetected", detectAnimation);
+
+
     }
 
 
@@ -258,11 +280,13 @@ public class Enemy {
 
     public void render(SpriteBatch batch) {
 
+
         if (currentState == State.DEAD && alreadyRendered) {
             return;
         }
 
         float x, y;
+
 
         if(currentState == State.DEAD){
             x = deathPosition.x - width / 2;
@@ -278,8 +302,28 @@ public class Enemy {
         else batch.draw(currentEnemyFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
 
         if (currentState != State.DEAD) {
+
             TextureRegion currentGunFrame = animationManager.getCurrentEnemyGunFrame(enemyIsFacingLeft);
             batch.draw(currentGunFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
+
+            if (this.playerDetected) {
+                if (!this.isAnimationPlaying) {
+                    animationManager.resetSomeStateTime();
+                    this.isAnimationPlaying = true;
+                }
+                this.bubbleTimer -= Gdx.graphics.getDeltaTime();
+                if (bubbleTimer >= 0){
+                    if(!animationManager.getSomeAnimationFinish("playerDetected")) {
+
+                        TextureRegion detectFrame = animationManager.getSomeFrame("playerDetected");
+                        batch.draw(detectFrame, x + 0.15f, y + 0.5f, 24 / Constants.PPM, 24 / Constants.PPM);
+                    } else {
+                        TextureRegion lastFrame = animationManager.getLastFrame("playerDetected");
+                        batch.draw(lastFrame, x + 0.15f, y + 0.5f, 24 / Constants.PPM, 24 / Constants.PPM);
+
+                    }
+                }
+            }
         }
 
         for (EnemyBullet bullet : bullets) {
@@ -305,18 +349,17 @@ public class Enemy {
         float distance = body.getPosition().x - player.getBody().getPosition().x;
 
         if (abs(distance) <= detectionRadius && hasLineOfSight()) {
-            if((distance > 0 && enemyIsFacingLeft) || (distance < 0 && !enemyIsFacingLeft) || distance == 0) {
-                reactionTime -= delta;
-                if (reactionTime <= 0) {
-                    currentState = State.ATTACK;
-                    playerDetected = true;
+            if((distance > 0 && this.enemyIsFacingLeft) || (distance < 0 && !this.enemyIsFacingLeft) || distance == 0) {
+                this.reactionTime -= delta;
+                if (this.reactionTime <= 0) {
+                    this.currentState = State.ATTACK;
+                    this.playerDetected = true;
+
                 }
             }
         } else {
-            if(currentState != State.ATTACK){
-                currentState = State.PATROL;
-            } else {
-                reactionTime = Constants.ENEMY_DETECTION_REACTION;
+            if(this.currentState == State.ATTACK){
+                this.reactionTime = Constants.ENEMY_DETECTION_REACTION;
             }
         }
     }
@@ -395,7 +438,7 @@ public class Enemy {
         if(!this.isShot) {
             currentState = State.DEAD;
             this.isShot = true;
-            animationManager.stateTime = 0;
+            animationManager.resetEnemyStateTime();
             deathPosition = body.getPosition().cpy();
 
             // world.destroyBody(body);
