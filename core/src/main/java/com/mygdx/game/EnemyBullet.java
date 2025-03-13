@@ -5,11 +5,14 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 
+import static java.lang.Math.abs;
+
 public class EnemyBullet {
 
     private Body body;
     private boolean active;
     private float aliveTime = Constants.ENEMY_BULLET_ALIVE_TIME;
+    float startPosition;
 
     public EnemyBullet(World world, float x, float y, boolean isFacingLeft, boolean isPlayerLeft) {
 
@@ -38,17 +41,21 @@ public class EnemyBullet {
 
         body.setLinearVelocity((isFacingLeft ? -Constants.ENEMY_BULLET_SPEED : Constants.ENEMY_BULLET_SPEED), 0);
 
+        startPosition = body.getPosition().x;
+
         shape.dispose();
 
     }
 
     public void update(float delta) {
-        if (!active) return;
 
-        aliveTime -= delta;
-
-        if (aliveTime <= 0) {
-            markForRemoval();
+        // Deactivate the bullet if it goes too far
+        if (this.active) {
+            float currentPosition = body.getPosition().x;
+            float distanceTraveled = currentPosition - startPosition;
+            if (abs(distanceTraveled) > Constants.RAMBO_BULLET_DISTANCE) {
+                markForRemoval();
+            }
         }
     }
 
@@ -66,11 +73,7 @@ public class EnemyBullet {
         }
     }
     public void markForRemoval() {
-        active = false;
-        if (body != null) {
-            // body.getWorld().destroyBody(body);
-            body = null;
-        }
+        this.active = false;
     }
 
     public boolean isMarkedForRemoval() {
@@ -82,4 +85,7 @@ public class EnemyBullet {
     }
 
 
+    public Body getBody() {
+        return body;
+    }
 }

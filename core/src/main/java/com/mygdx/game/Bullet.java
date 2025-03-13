@@ -55,7 +55,6 @@ public class Bullet {
         else body.setLinearVelocity(Constants.RAMBO_BULLET_SPEED, 0);
 
         body.setBullet(true);
-
         shape.dispose();
 
         // Store the starting position
@@ -73,7 +72,6 @@ public class Bullet {
                 this.active = false;
                 markedForRemoval = true;
             }
-
         }
 
     }

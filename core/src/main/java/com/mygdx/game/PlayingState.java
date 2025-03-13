@@ -81,7 +81,7 @@ public class PlayingState extends GameState {
         );
 
         // Initialize enemies
-        spawner = new EnemySpawner(world, player);
+        spawner = new EnemySpawner(world, player, bulletsToRemove);
         spawner.spawnPoints.clear();
         spawner.setSpawnPoints(currentLevel.enemySpawnPoints);
 
@@ -399,7 +399,7 @@ public class PlayingState extends GameState {
 
         // 3. Reinitialize everything
         player = new Player(world, 100/Constants.PPM, 300/Constants.PPM, 32/Constants.PPM, 32/Constants.PPM, bulletsToRemove, this);
-        spawner = new EnemySpawner(world, player);
+        spawner = new EnemySpawner(world, player, bulletsToRemove);
 
         // 4. Recreate collision tiles
         createCollisionTiles();

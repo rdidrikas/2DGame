@@ -4,6 +4,8 @@ import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -99,6 +101,8 @@ public class Gun {
         if(shotTimer <= 0){
             isFiring = true;
             bullets.add(new Bullet(world, x, y, angle, isFacingLeft));
+            Sound sound = Gdx.audio.newSound(Gdx.files.internal("Sounds/Guns/RamboGunSound2.wav"));
+            sound.play();
             shotTimer = Constants.RAMBO_SHOT_COOLDOWN;
         }
 

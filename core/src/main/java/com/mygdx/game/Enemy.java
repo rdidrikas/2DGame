@@ -45,8 +45,9 @@ public class Enemy {
     private boolean enemyIsFacingLeft;
 
     public Set<EnemyBullet> bullets = new LinkedHashSet<>();
+    public Set<Body> bulletsToRemove;
 
-    public Enemy(World world, float x, float y, Player player) {
+    public Enemy(World world, float x, float y, Player player, Set<Body> bulletsToRemove) {
 
         this.initialPosition = new Vector2(x, y);
 
@@ -58,6 +59,7 @@ public class Enemy {
         this.alreadyRendered = false;
         this.deathTimer = Constants.ENEMY_DEATH_TIMER;
         this.playerDetected = false;
+        this.bulletsToRemove = bulletsToRemove;
 
         enemyIsFacingLeft = false;
         width = 32 / Constants.PPM;
@@ -191,12 +193,17 @@ public class Enemy {
         animationManager.update(delta, isGroundedEnemy(), this.isMoving, this.isFiring, this.isShot, this.playerDetected,2);
 
 
+
         Iterator<EnemyBullet> iterator = bullets.iterator();
         while (iterator.hasNext()) {
             EnemyBullet bullet = iterator.next();
+            bullet.update(delta);
             if (bullet.isMarkedForRemoval()) {
                 iterator.remove();
-                // System.out.println("Bullet removed here");
+                Body body = bullet.getBody();
+                if (body != null && body.isActive()) { // Check if body is active
+                    bulletsToRemove.add(body);
+                }
             }
         }
 

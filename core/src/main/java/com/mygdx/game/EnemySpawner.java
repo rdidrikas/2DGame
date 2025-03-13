@@ -7,6 +7,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 
 import java.util.Iterator;
+import java.util.Set;
 
 public class EnemySpawner {
 
@@ -14,11 +15,13 @@ public class EnemySpawner {
     public Array<Vector2> spawnPoints = new Array<>();
     private World world;
     private Player player;
+    private Set<Body> bulletsToRemove;
 
 
-    public EnemySpawner(World world, Player player) {
+    public EnemySpawner(World world, Player player, Set<Body> bulletsToRemove) {
         this.world = world;
         this.player = player;
+        this.bulletsToRemove = bulletsToRemove;
     }
 
     public void setSpawnPoints(Array<Vector2> points) {
@@ -28,7 +31,7 @@ public class EnemySpawner {
 
     public void spawnEnemy() {
         for (Vector2 pos : spawnPoints) {
-            enemies.add(new Enemy(world, pos.x, pos.y, player));
+            enemies.add(new Enemy(world, pos.x, pos.y, player, bulletsToRemove));
         }
     }
 
