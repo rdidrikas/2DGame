@@ -51,11 +51,6 @@ public class PlayingState extends GameState {
         levelManager = new LevelManager();
         initializeLevel();
 
-        /*************** Collisions ***************/
-
-
-
-
     }
 
 
@@ -258,7 +253,7 @@ public class PlayingState extends GameState {
 
         /*********** DEBUGGER **********/
 
-         debugRenderer.render(world, camera.combined);
+       debugRenderer.render(world, camera.combined);
     }
 
 
@@ -360,7 +355,7 @@ public class PlayingState extends GameState {
     private void createChainBody(List<Vector2> vertices) {
         ChainShape chain = new ChainShape();
         Vector2[] vertArray = vertices.toArray(new Vector2[0]);
-        chain.createChain(vertArray);
+        chain.createLoop(vertArray);
 
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.StaticBody;
