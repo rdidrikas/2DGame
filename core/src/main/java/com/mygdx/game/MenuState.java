@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 
 public class MenuState extends GameState {
     private Texture menuTexture;
-    FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Fonts/Font/MenuFont.ttf"));
+    // FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Fonts/Font/MenuFont.ttf"));
 
     public MenuState(GameStateManager gsm) {
         super(gsm);

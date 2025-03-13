@@ -180,8 +180,8 @@ public class Enemy {
         animationManager.addAnimation("enemyNormalWalk", new Animation<>(0.5f, walkFrames));
 
         // Enemy shot animation
-        TextureRegion[] enemyShotFrames = new TextureRegion[15];
-        for (int i = 16, temp = 0; i < 31; i++, temp++) {
+        TextureRegion[] enemyShotFrames = new TextureRegion[17];
+        for (int i = 15, temp = 0; i < 32; i++, temp++) {
             enemyShotFrames[temp] = tmpFrames[11][i];
         }
 

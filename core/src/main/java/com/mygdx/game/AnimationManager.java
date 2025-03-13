@@ -42,12 +42,12 @@ public class AnimationManager {
 
     public void update(float delta, boolean isGrounded, boolean isMoving, boolean isFiring, boolean isShot, boolean playerDetected, int type ) {
         stateTime += delta;
-        playerStateTime += delta;
-        gunStateTime += delta;
-        enemyStateTime += delta;
-        enemyGunStateTime += delta;
-        bulletStateTime += delta;
-        someStateTime += delta;
+        playerStateTime = stateTime;
+        gunStateTime = stateTime;
+        enemyStateTime = stateTime;
+        enemyGunStateTime = stateTime;
+        bulletStateTime = stateTime;
+        someStateTime = stateTime;
 
         animIsShot = isShot; // Used to play animation only one time
         // type == 0 -> player
