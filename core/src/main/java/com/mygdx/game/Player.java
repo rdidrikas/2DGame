@@ -25,6 +25,7 @@ public class Player {
     private boolean canJump = false;
     private boolean isJumping = false;
 
+
     private AnimationManager animationManager;
     public PlayingState playingState;
 
@@ -37,6 +38,7 @@ public class Player {
     public boolean isShot;
     public boolean isFacingLeft = false;
     public boolean levelCompleted;
+    private boolean needSmoke;
 
     public float deathTimer = Constants.PLAYER_DEATH_DURATION;
     public Set<Body> bulletsToRemove;
@@ -57,6 +59,7 @@ public class Player {
         this.isFiring = false;
         this.isShot = false;
         this.levelCompleted = false;
+        this.needSmoke = false;
 
         this.playingState = playingState;
         this.bulletsToRemove = bulletsToRemove;
@@ -134,6 +137,18 @@ public class Player {
         deadFrames[0].flip(true, false); // Flip the frame
         animationManager.addAnimation("dead", new Animation<>(0.1f, deadFrames));
 
+        // Misc Animations
+
+        Texture smokeSheet1 = new Texture("Animations/Misc/SmokeSmall2.png");
+        TextureRegion[][] tmpSmokeFrames1 = TextureRegion.split(smokeSheet1, 16, 16);
+
+        TextureRegion[] smokeFrames1 = new TextureRegion[8];
+        for (int i = 0; i < 8; i++) {
+            smokeFrames1[i] = tmpSmokeFrames1[0][i];
+        }
+        animationManager.addAnimation("smoke1", new Animation<>(0.3f, smokeFrames1));
+
+
     }
 
 
@@ -144,7 +159,20 @@ public class Player {
             playingState.resetPosition();
             reset();
         }
+        /*
+        if(this.needSmoke) {
+            if (animationManager.getSomeAnimationFinish("smoke1")) {
+                this.needSmoke = false;
+                System.out.println("smoke finish");
+                animationManager.setStateTime(0);
+            }
+        }
 
+        if(isJumping && !this.needSmoke){
+            this.needSmoke = true;
+        }
+
+        */
         if (isShot) {
             deathTimer -= delta;
             if (deathTimer <= 0) {
@@ -186,6 +214,14 @@ public class Player {
 
         TextureRegion currentPlayerFrame = animationManager.getCurrentPlayerFrame(isFacingLeft);
         batch.draw(currentPlayerFrame, x, y, width, height);
+
+        /*
+        if(isGrounded() && this.needSmoke) {
+            TextureRegion currentSmokeFrame = animationManager.getSomeFrame("smoke1");
+            //batch.draw(currentSmokeFrame, x, y, width, height);
+            //System.out.println("smoke");
+        }
+        */
 
         if (!isShot) gun.render(batch, x, y); // draw gun
 

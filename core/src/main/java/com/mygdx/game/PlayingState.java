@@ -57,6 +57,7 @@ public class PlayingState extends GameState {
     /********* LEVEL MANAGEMENT *********/
 
 
+
     private void initializeLevel() {
         // Clear existing world
         if(world != null) world.dispose();
@@ -130,8 +131,7 @@ public class PlayingState extends GameState {
                     ((Bullet) userDataA).markForRemoval(); // Removes sprite
                     removeBulletsQueue(fixtureA); // Removes body
                     //System.out.println("Bullet A marked for removal");
-                }
-                if (userDataB instanceof Bullet) {
+                } else if (userDataB instanceof Bullet) {
                     ((Bullet) userDataB).markForRemoval(); // Removes sprite
                     removeBulletsQueue(fixtureB); // Removes body
                     //System.out.println("Bullet B marked for removal");
@@ -141,8 +141,7 @@ public class PlayingState extends GameState {
                     ((EnemyBullet) userDataA).markForRemoval(); // Removes sprite
                     removeBulletsQueue(fixtureA); // Removes body
                     //System.out.println("Bullet A marked for removal");
-                }
-                if (userDataB instanceof EnemyBullet) {
+                } else if (userDataB instanceof EnemyBullet) {
                     ((EnemyBullet) userDataB).markForRemoval(); // Removes sprite
                     removeBulletsQueue(fixtureB); // Removes body
                     //System.out.println("Bullet B marked for removal");
@@ -253,7 +252,7 @@ public class PlayingState extends GameState {
 
         /*********** DEBUGGER **********/
 
-       debugRenderer.render(world, camera.combined);
+       // debugRenderer.render(world, camera.combined);
     }
 
 

@@ -43,7 +43,7 @@ public class Enemy {
     private float patrolCooldown = 0;
     public float deathTimer;
     private float reactionTime = Constants.ENEMY_DETECTION_REACTION;
-    private float delay = 5f; // When player is detected and out of sight, wait before turning left
+    private float delay; // When player is detected and out of sight, wait before turning left
 
     private AnimationManager animationManager;
     private boolean enemyIsFacingLeft;
@@ -71,6 +71,7 @@ public class Enemy {
         this.deathTimer = Constants.ENEMY_DEATH_TIMER;
         this.playerDetected = false;
         this.bulletsToRemove = bulletsToRemove;
+        this.delay = 5f;
 
         enemyIsFacingLeft = false;
         width = 32 / Constants.PPM;
@@ -211,11 +212,11 @@ public class Enemy {
             handleState(delta);
 
             if (currentState == State.ATTACK && !hasLineOfSight()) {
-                delay -= delta;
-                if (delay <= 0) {
+                this.delay -= delta;
+                if (this.delay <= 0) {
                     body.applyLinearImpulse(MathUtils.random(-0.3f, 0.3f), 0, body.getWorldCenter().x, body.getWorldCenter().y, true);
                     enemyIsFacingLeft = body.getLinearVelocity().x < 0;
-                    delay = 3f;
+                    this.delay = 3f;
                 }
 
             }
@@ -271,13 +272,13 @@ public class Enemy {
             y = body.getPosition().y - height / 2 + Constants.SPRITE_YOFFSET;
         }
 
-        TextureRegion currentEnemyFrame = animationManager.getCurrentPlayerFrame(enemyIsFacingLeft);
+        TextureRegion currentEnemyFrame = animationManager.getCurrentEnemyFrame(enemyIsFacingLeft);
 
         if (currentState == State.DEAD) batch.draw(currentEnemyFrame, x, y - Constants.SPRITE_YOFFSET, 32 / Constants.PPM, 32 / Constants.PPM); // Need to offset the sprite
         else batch.draw(currentEnemyFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
 
         if (currentState != State.DEAD) {
-            TextureRegion currentGunFrame = animationManager.getCurrentGunFrame(enemyIsFacingLeft);
+            TextureRegion currentGunFrame = animationManager.getCurrentEnemyGunFrame(enemyIsFacingLeft);
             batch.draw(currentGunFrame, x, y, 32 / Constants.PPM, 32 / Constants.PPM);
         }
 
