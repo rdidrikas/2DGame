@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.Set;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.random;
 
 public class Enemy {
 
@@ -331,7 +332,7 @@ public class Enemy {
         shootTimer -= delta;
         if (shootTimer <= 0) {
             shoot();
-            shootTimer = Constants.ENEMY_SHOT_COOLDOWN;
+            shootTimer = (float) (Math.random() * (Constants.ENEMY_MAX_SHOT_COOLDOWN - Constants.ENEMY_MIN_SHOT_COOLDOWN) + Constants.ENEMY_MIN_SHOT_COOLDOWN);
             // System.out.println("Enemy shot");
         }
     }
