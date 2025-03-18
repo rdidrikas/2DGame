@@ -78,7 +78,7 @@ public class AnimationManager {
             }
         } else if(type == 2){
             if (isShot) {
-                if (animations.get("enemyNormalShot").isAnimationFinished(enemyStateTime)) { // Dont know why it doesnt work with enemyStateTime
+                if (animations.get("enemyNormalShot").isAnimationFinished(enemyStateTime)) { // Now works with enemy state time!!!
                     currentState = "enemyNormalDead";
                 }
                 else currentState = "enemyNormalShot";
@@ -162,7 +162,7 @@ public class AnimationManager {
     }
 
     public void resetEnemyStateTime() {
-        this.stateTime = 0;
+        this.enemyStateTime = 0;
     }
 
 }
