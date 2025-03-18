@@ -179,6 +179,7 @@ public class PlayingState extends GameState {
 
         if(xEnd < 0.2 && yEnd < 0.2) { // *** PPM CHANGE: Replace with level completion check
             if(levelManager.isFinalLevel()) {
+                // gsm.setState(new GameOverState(gsm, this));
                 System.exit(1);
             } else {
                 nextLevel();
@@ -284,8 +285,8 @@ public class PlayingState extends GameState {
             if (Gdx.input.isKeyPressed(Input.Keys.J)){
                 player.fire();
             }
-            if (Gdx.input.isKeyJustPressed(Input.Keys.K)){
-                spawner.spawnEnemy();
+            if (Gdx.input.isKeyJustPressed(Input.Keys.M)){
+                gsm.setState(new MapEditorState(gsm));
             }
             if (Gdx.input.isKeyJustPressed(Input.Keys.L)){
                 System.out.println("Player X: " + player.getBody().getPosition().x);

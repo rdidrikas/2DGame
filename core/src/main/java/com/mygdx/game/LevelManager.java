@@ -9,7 +9,7 @@ import com.badlogic.gdx.utils.Json;
 public class LevelManager {
     private Array<Level> levels = new Array<>();
     private int currentLevelIndex = 0;
-    private int maxLevels = 3;
+    public int maxLevels = 3;
 
     public LevelManager() {
         loadLevels();
@@ -40,5 +40,13 @@ public class LevelManager {
 
     public boolean isFinalLevel() {
         return currentLevelIndex == levels.size - 1;
+    }
+
+    public int getLevelMax(){
+        return maxLevels;
+    }
+
+    public void setLevelMax(int max){
+        maxLevels = max;
     }
 }
